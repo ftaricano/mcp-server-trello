@@ -3,6 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { TrelloClient } from './trello-client.js';
+import { VERSION } from './version.js';
 
 class TrelloServer {
   private server: McpServer;
@@ -26,7 +27,7 @@ class TrelloServer {
 
     this.server = new McpServer({
       name: 'trello-server',
-      version: '1.0.0',
+      version: VERSION,
     });
 
     this.setupTools();
