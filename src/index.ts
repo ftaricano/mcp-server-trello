@@ -41,6 +41,7 @@ class TrelloServer {
 
   private setupTools() {
     // Get cards from a specific list
+    // @ts-expect-error TS2589: SDK schema inference depth. Pin: @modelcontextprotocol/sdk 1.29.0.
     this.server.registerTool(
       'get_cards_by_list_id',
       {
@@ -146,6 +147,7 @@ class TrelloServer {
     );
 
     // Add a new card to a list
+    // @ts-expect-error TS2589: SDK schema inference depth. Pin: @modelcontextprotocol/sdk 1.29.0.
     this.server.registerTool(
       'add_card_to_list',
       {
@@ -191,6 +193,7 @@ class TrelloServer {
     );
 
     // Update card details
+    // @ts-expect-error TS2589: SDK schema inference depth. Pin: @modelcontextprotocol/sdk 1.29.0.
     this.server.registerTool(
       'update_card_details',
       {
@@ -404,6 +407,7 @@ class TrelloServer {
     );
 
     // Attach image to card
+    // @ts-expect-error TS2589: SDK schema inference depth. Pin: @modelcontextprotocol/sdk 1.29.0.
     this.server.registerTool(
       'attach_image_to_card',
       {
@@ -655,6 +659,7 @@ class TrelloServer {
     );
 
     // Get card details
+    // @ts-expect-error TS2589: SDK schema inference depth. Pin: @modelcontextprotocol/sdk 1.29.0.
     this.server.registerTool(
       'get_card',
       {
