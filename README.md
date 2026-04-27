@@ -772,29 +772,43 @@ The server provides detailed error messages for various scenarios:
 
 ### Prerequisites
 
-- Node.js 16 or higher
-- npm or yarn
+- Node.js 18 or higher (CI runs against 18, 20, 22)
+- npm
 
 ### Setup
-
-1. Clone the repository
 
 ```bash
 git clone https://github.com/delorenj/mcp-server-trello
 cd mcp-server-trello
+SKIP_PREPARE=true npm install
+cp .env.example .env
+# fill in TRELLO_API_KEY and TRELLO_TOKEN
 ```
 
-2. Install dependencies
+### Scripts
+
+- `npm run build` — compile + minify to `build/`
+- `npm run build:dev` — compile only (no minify, faster iteration)
+- `npm run dev` — run from source via ts-node
+- `npm test` — run unit test suite
+- `npm run test:watch` — vitest watch mode
+- `npm run test:coverage` — coverage report (thresholds: 60% lines)
+- `npm run lint` — ESLint check
+- `npm run typecheck` — TypeScript type check (no emit)
+- `npm run format` — Prettier write
+
+### Testing
+
+Unit tests live in `tests/` and use [Vitest](https://vitest.dev). Tests mock the Trello API via axios mocks — they do not hit the real API.
 
 ```bash
-npm install
+npm test
+npm run test:coverage
 ```
 
-3. Build the project
+### CI
 
-```bash
-npm run build
-```
+GitHub Actions runs lint, typecheck, test, and build on every push and PR to `main` across Node 18, 20, and 22. See `.github/workflows/ci.yml`.
 
 ## Running evals
 
