@@ -133,7 +133,7 @@ export class TrelloClient {
     return workspace;
   }
 
-  private async handleRequest<T = any>(requestFn: () => Promise<T>): Promise<T> {
+  private async handleRequest<T = unknown>(requestFn: () => Promise<T>): Promise<T> {
     try {
       return await requestFn();
     } catch (error) {
