@@ -9,8 +9,8 @@
     "mcp-server-trello": "./build/index.js"
   },
   "scripts": {
-    "build:dev": "tsc && chmod +x build/index.js",
-    "build": "tsc && terser build/index.js --compress drop_console=true --mangle --output build/index.js && chmod +x build/index.js",
+    "build:dev": "NODE_OPTIONS='--max-old-space-size=8192' tsc && chmod +x build/index.js",
+    "build": "NODE_OPTIONS='--max-old-space-size=8192' tsc && terser build/index.js --compress drop_console=true --mangle --output build/index.js && chmod +x build/index.js",
     "start": "node build/index.js",
     "dev": "ts-node --esm src/index.ts",
     "lint": "eslint . --ext .ts",
@@ -20,7 +20,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "NODE_OPTIONS='--max-old-space-size=8192' tsc --noEmit"
   },
   "repository": {
     "type": "git",
