@@ -6,15 +6,19 @@ import { VERSION } from './version.js';
 import { listBoards, setBoard, activeBoard } from './cli/commands/boards.js';
 import { lists } from './cli/commands/lists.js';
 import { addCard, updateCard, moveCard, getCard, myCards } from './cli/commands/cards.js';
+import { loadKeychainCredentials } from './cli/keychain.js';
 
 function makeClient(): TrelloClient {
-  const apiKey = process.env.TRELLO_API_KEY;
-  const token = process.env.TRELLO_TOKEN;
+  const keychain = loadKeychainCredentials();
+  const apiKey = process.env.TRELLO_API_KEY ?? keychain.apiKey;
+  const token = process.env.TRELLO_TOKEN ?? keychain.token;
   if (!apiKey || !token) {
-    process.stderr.write('Error: TRELLO_API_KEY and TRELLO_TOKEN must be set (env or .env file)\n');
+    process.stderr.write(
+      'Error: TRELLO_API_KEY and TRELLO_TOKEN must be set (env, .env file, or macOS keychain via TRELLO_KEYCHAIN_PREFIX)\n'
+    );
     process.exit(1);
   }
-  const defaultBoardId = process.env.TRELLO_BOARD_ID;
+  const defaultBoardId = process.env.TRELLO_BOARD_ID ?? keychain.boardId;
   return new TrelloClient({ apiKey, token, defaultBoardId, boardId: defaultBoardId });
 }
 
