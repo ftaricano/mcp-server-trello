@@ -320,3 +320,36 @@ describe('cli card assign/unassign', () => {
     expect(out).toMatch(/Unassigned/);
   });
 });
+
+import { cardsInList } from '../../src/cli/commands/lists.js';
+
+describe('cli cards list <listId>', () => {
+  it('returns cards from the given list', async () => {
+    const client = {
+      getCardsByList: vi.fn().mockResolvedValue([{ id: 'c1', name: 'Task', shortUrl: 'u' }]),
+    };
+    const out = await cardsInList(client as unknown as TrelloClient, 'l1', { md: false });
+    expect(client.getCardsByList).toHaveBeenCalledWith(undefined, 'l1');
+    expect(out).toContain('"id": "c1"');
+  });
+
+  it('passes --board override', async () => {
+    const client = { getCardsByList: vi.fn().mockResolvedValue([]) };
+    await cardsInList(client as unknown as TrelloClient, 'l1', { md: false, board: 'b9' });
+    expect(client.getCardsByList).toHaveBeenCalledWith('b9', 'l1');
+  });
+
+  it('renders markdown when md=true', async () => {
+    const client = {
+      getCardsByList: vi.fn().mockResolvedValue([{ id: 'c1', name: 'Task' }]),
+    };
+    const out = await cardsInList(client as unknown as TrelloClient, 'l1', { md: true });
+    expect(out).toMatch(/- \*\*Task\*\* \(`c1`\)/);
+  });
+
+  it('returns "No cards." for empty list when md=true', async () => {
+    const client = { getCardsByList: vi.fn().mockResolvedValue([]) };
+    const out = await cardsInList(client as unknown as TrelloClient, 'l1', { md: true });
+    expect(out).toBe('No cards.\n');
+  });
+});

@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import { TrelloClient } from './trello-client.js';
 import { VERSION } from './version.js';
 import { listBoards, setBoard, activeBoard } from './cli/commands/boards.js';
-import { lists } from './cli/commands/lists.js';
+import { lists, cardsInList } from './cli/commands/lists.js';
 import {
   addCard,
   updateCard,
@@ -156,5 +156,12 @@ cards
   .description('Cards assigned to the current user')
   .option('--md', 'Render as markdown', false)
   .action(opts => run(myCards, opts));
+
+cards
+  .command('list <listId>')
+  .description('List cards in a specific list')
+  .option('--board <id>', 'Override board id')
+  .option('--md', 'Render as markdown', false)
+  .action((listId, opts) => run(cardsInList, listId, opts));
 
 program.parseAsync(process.argv);
