@@ -14,3 +14,16 @@ export async function lists(client: TrelloClient, opts: ListsOpts): Promise<stri
   }
   return formatJson(result);
 }
+
+export async function cardsInList(
+  client: TrelloClient,
+  listId: string,
+  opts: ListsOpts
+): Promise<string> {
+  const cards = await client.getCardsByList(opts.board, listId);
+  if (opts.md) {
+    if (cards.length === 0) return 'No cards.\n';
+    return cards.map(c => `- **${c.name}** (\`${c.id}\`)`).join('\n') + '\n';
+  }
+  return formatJson(cards);
+}

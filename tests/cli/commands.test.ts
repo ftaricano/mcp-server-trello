@@ -211,3 +211,215 @@ describe('cli cards commands', () => {
     expect(out).toBe('No cards assigned.\n');
   });
 });
+
+import {
+  commentCard,
+  archiveCard as archiveCardCmd,
+  attachImage,
+} from '../../src/cli/commands/cards.js';
+
+describe('cli card comment/archive/attach', () => {
+  it('commentCard calls addComment with text', async () => {
+    const client = {
+      addComment: vi.fn().mockResolvedValue({ id: 'a1', data: { text: 'hi' } }),
+    };
+    const out = await commentCard(client as unknown as TrelloClient, 'c1', 'hi', { md: false });
+    expect(client.addComment).toHaveBeenCalledWith('c1', 'hi');
+    expect(out).toContain('"id": "a1"');
+  });
+
+  it('commentCard renders markdown when md=true', async () => {
+    const client = {
+      addComment: vi.fn().mockResolvedValue({ id: 'a1', data: { text: 'hi' } }),
+    };
+    const out = await commentCard(client as unknown as TrelloClient, 'c1', 'hi', { md: true });
+    expect(out).toContain('hi');
+    expect(out).toContain('a1');
+  });
+
+  it('archiveCardCmd calls archiveCard with cardId', async () => {
+    const client = {
+      archiveCard: vi.fn().mockResolvedValue({ id: 'c1', closed: true }),
+    };
+    await archiveCardCmd(client as unknown as TrelloClient, 'c1', { md: false });
+    expect(client.archiveCard).toHaveBeenCalledWith(undefined, 'c1');
+  });
+
+  it('archiveCardCmd respects --board override', async () => {
+    const client = {
+      archiveCard: vi.fn().mockResolvedValue({ id: 'c1', closed: true }),
+    };
+    await archiveCardCmd(client as unknown as TrelloClient, 'c1', { md: false, board: 'b9' });
+    expect(client.archiveCard).toHaveBeenCalledWith('b9', 'c1');
+  });
+
+  it('attachImage calls attachImageToCard with url + optional name', async () => {
+    const client = {
+      attachImageToCard: vi.fn().mockResolvedValue({ id: 'a1', url: 'u' }),
+    };
+    await attachImage(client as unknown as TrelloClient, 'c1', 'https://img.example/x.png', {
+      md: false,
+      name: 'Cover',
+    });
+    expect(client.attachImageToCard).toHaveBeenCalledWith(
+      undefined,
+      'c1',
+      'https://img.example/x.png',
+      'Cover'
+    );
+  });
+
+  it('attachImage works without --name', async () => {
+    const client = {
+      attachImageToCard: vi.fn().mockResolvedValue({ id: 'a1', url: 'u' }),
+    };
+    await attachImage(client as unknown as TrelloClient, 'c1', 'https://img.example/x.png', {
+      md: false,
+    });
+    expect(client.attachImageToCard).toHaveBeenCalledWith(
+      undefined,
+      'c1',
+      'https://img.example/x.png',
+      undefined
+    );
+  });
+});
+
+import {
+  assignMember as assignMemberCmd,
+  unassignMember as unassignMemberCmd,
+} from '../../src/cli/commands/cards.js';
+
+describe('cli card assign/unassign', () => {
+  it('assignMember calls client.assignMember', async () => {
+    const client = { assignMember: vi.fn().mockResolvedValue([{ id: 'm1' }]) };
+    const out = await assignMemberCmd(client as unknown as TrelloClient, 'c1', 'm1', { md: false });
+    expect(client.assignMember).toHaveBeenCalledWith('c1', 'm1');
+    expect(out).toContain('"id": "m1"');
+  });
+
+  it('assignMember --md produces a confirmation', async () => {
+    const client = { assignMember: vi.fn().mockResolvedValue([{ id: 'm1' }]) };
+    const out = await assignMemberCmd(client as unknown as TrelloClient, 'c1', 'm1', { md: true });
+    expect(out).toMatch(/Assigned/);
+    expect(out).toContain('m1');
+    expect(out).toContain('c1');
+  });
+
+  it('unassignMember calls client.unassignMember', async () => {
+    const client = { unassignMember: vi.fn().mockResolvedValue([]) };
+    await unassignMemberCmd(client as unknown as TrelloClient, 'c1', 'm1', { md: false });
+    expect(client.unassignMember).toHaveBeenCalledWith('c1', 'm1');
+  });
+
+  it('unassignMember --md produces a confirmation', async () => {
+    const client = { unassignMember: vi.fn().mockResolvedValue([]) };
+    const out = await unassignMemberCmd(client as unknown as TrelloClient, 'c1', 'm1', {
+      md: true,
+    });
+    expect(out).toMatch(/Unassigned/);
+  });
+});
+
+import { cardsInList } from '../../src/cli/commands/lists.js';
+
+describe('cli cards list <listId>', () => {
+  it('returns cards from the given list', async () => {
+    const client = {
+      getCardsByList: vi.fn().mockResolvedValue([{ id: 'c1', name: 'Task', shortUrl: 'u' }]),
+    };
+    const out = await cardsInList(client as unknown as TrelloClient, 'l1', { md: false });
+    expect(client.getCardsByList).toHaveBeenCalledWith(undefined, 'l1');
+    expect(out).toContain('"id": "c1"');
+  });
+
+  it('passes --board override', async () => {
+    const client = { getCardsByList: vi.fn().mockResolvedValue([]) };
+    await cardsInList(client as unknown as TrelloClient, 'l1', { md: false, board: 'b9' });
+    expect(client.getCardsByList).toHaveBeenCalledWith('b9', 'l1');
+  });
+
+  it('renders markdown when md=true', async () => {
+    const client = {
+      getCardsByList: vi.fn().mockResolvedValue([{ id: 'c1', name: 'Task' }]),
+    };
+    const out = await cardsInList(client as unknown as TrelloClient, 'l1', { md: true });
+    expect(out).toMatch(/- \*\*Task\*\* \(`c1`\)/);
+  });
+
+  it('returns "No cards." for empty list when md=true', async () => {
+    const client = { getCardsByList: vi.fn().mockResolvedValue([]) };
+    const out = await cardsInList(client as unknown as TrelloClient, 'l1', { md: true });
+    expect(out).toBe('No cards.\n');
+  });
+});
+
+import { boardLabels, boardMembers } from '../../src/cli/commands/boards.js';
+
+describe('cli board labels/members', () => {
+  it('boardLabels returns JSON of all labels', async () => {
+    const client = {
+      getBoardLabels: vi
+        .fn()
+        .mockResolvedValue([{ id: 'l1', name: 'Tarefa', color: 'green', idBoard: 'b' }]),
+    };
+    const out = await boardLabels(client as unknown as TrelloClient, { md: false });
+    expect(out).toContain('"name": "Tarefa"');
+  });
+
+  it('boardLabels accepts --board override', async () => {
+    const client = { getBoardLabels: vi.fn().mockResolvedValue([]) };
+    await boardLabels(client as unknown as TrelloClient, { md: false, board: 'bX' });
+    expect(client.getBoardLabels).toHaveBeenCalledWith('bX');
+  });
+
+  it('boardLabels --md renders list with id and color', async () => {
+    const client = {
+      getBoardLabels: vi
+        .fn()
+        .mockResolvedValue([{ id: 'l1', name: 'Tarefa', color: 'green', idBoard: 'b' }]),
+    };
+    const out = await boardLabels(client as unknown as TrelloClient, { md: true });
+    expect(out).toContain('Tarefa');
+    expect(out).toContain('l1');
+    expect(out).toContain('green');
+  });
+
+  it('boardLabels --md with no color shows "no color"', async () => {
+    const client = {
+      getBoardLabels: vi
+        .fn()
+        .mockResolvedValue([{ id: 'l1', name: 'Tarefa', color: null, idBoard: 'b' }]),
+    };
+    const out = await boardLabels(client as unknown as TrelloClient, { md: true });
+    expect(out).toContain('no color');
+  });
+
+  it('boardMembers returns JSON of all members', async () => {
+    const client = {
+      getBoardMembers: vi
+        .fn()
+        .mockResolvedValue([{ id: 'm1', fullName: 'Ferd', username: 'ferd' }]),
+    };
+    const out = await boardMembers(client as unknown as TrelloClient, { md: false });
+    expect(out).toContain('"username": "ferd"');
+  });
+
+  it('boardMembers --md renders a list', async () => {
+    const client = {
+      getBoardMembers: vi
+        .fn()
+        .mockResolvedValue([{ id: 'm1', fullName: 'Ferd', username: 'ferd' }]),
+    };
+    const out = await boardMembers(client as unknown as TrelloClient, { md: true });
+    expect(out).toContain('Ferd');
+    expect(out).toContain('@ferd');
+    expect(out).toContain('m1');
+  });
+
+  it('boardLabels returns "No labels." for empty when md=true', async () => {
+    const client = { getBoardLabels: vi.fn().mockResolvedValue([]) };
+    const out = await boardLabels(client as unknown as TrelloClient, { md: true });
+    expect(out).toBe('No labels.\n');
+  });
+});

@@ -27,3 +27,28 @@ export async function activeBoard(client: TrelloClient, opts: CommonOpts): Promi
   const board = await client.getBoardById(id);
   return opts.md ? `**${board.name}** (\`${board.id}\`)\n${board.url}\n` : formatJson(board);
 }
+
+interface BoardMetaOpts {
+  md: boolean;
+  board?: string;
+}
+
+export async function boardLabels(client: TrelloClient, opts: BoardMetaOpts): Promise<string> {
+  const labels = await client.getBoardLabels(opts.board);
+  if (opts.md) {
+    if (labels.length === 0) return 'No labels.\n';
+    return (
+      labels.map(l => `- **${l.name}** (\`${l.id}\`) — ${l.color ?? 'no color'}`).join('\n') + '\n'
+    );
+  }
+  return formatJson(labels);
+}
+
+export async function boardMembers(client: TrelloClient, opts: BoardMetaOpts): Promise<string> {
+  const members = await client.getBoardMembers(opts.board);
+  if (opts.md) {
+    if (members.length === 0) return 'No members.\n';
+    return members.map(m => `- **${m.fullName}** (@${m.username}, \`${m.id}\`)`).join('\n') + '\n';
+  }
+  return formatJson(members);
+}

@@ -265,6 +265,115 @@ describe('TrelloClient', () => {
     });
   });
 
+  describe('addComment', () => {
+    it('addComment posts to /cards/{id}/actions/comments with text', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.post.mockResolvedValueOnce({
+        data: { id: 'a1', data: { text: 'hi' } },
+      });
+
+      const action = await client.addComment('card1', 'hi');
+
+      expect(action.id).toBe('a1');
+      expect(mock.post).toHaveBeenCalledWith(
+        expect.stringContaining('/cards/card1/actions/comments'),
+        null,
+        expect.objectContaining({ params: expect.objectContaining({ text: 'hi' }) })
+      );
+    });
+  });
+
+  describe('getBoardLabels', () => {
+    it('GETs /boards/{id}/labels using activeBoard fallback', async () => {
+      const client = new TrelloClient({
+        apiKey: 'k',
+        token: 't',
+        defaultBoardId: 'board123',
+      });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({
+        data: [{ id: 'l1', name: 'Tarefa', color: 'green', idBoard: 'board123' }],
+      });
+
+      const labels = await client.getBoardLabels();
+
+      expect(mock.get).toHaveBeenCalledWith('/boards/board123/labels');
+      expect(labels[0].name).toBe('Tarefa');
+    });
+
+    it('accepts boardId override', async () => {
+      const client = new TrelloClient({
+        apiKey: 'k',
+        token: 't',
+        defaultBoardId: 'board123',
+      });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({ data: [] });
+
+      await client.getBoardLabels('boardX');
+
+      expect(mock.get).toHaveBeenCalledWith('/boards/boardX/labels');
+    });
+
+    it('throws when no board configured and no override', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+
+      await expect(client.getBoardLabels()).rejects.toThrow(/boardId is required/);
+    });
+  });
+
+  describe('getBoardMembers', () => {
+    it('GETs /boards/{id}/members', async () => {
+      const client = new TrelloClient({
+        apiKey: 'k',
+        token: 't',
+        defaultBoardId: 'board123',
+      });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({
+        data: [{ id: 'm1', fullName: 'Ferd', username: 'ferd' }],
+      });
+
+      const members = await client.getBoardMembers();
+
+      expect(mock.get).toHaveBeenCalledWith('/boards/board123/members');
+      expect(members[0].username).toBe('ferd');
+    });
+  });
+
+  describe('assignMember', () => {
+    it('POSTs to /cards/{id}/idMembers with value=memberId', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.post.mockResolvedValueOnce({ data: [{ id: 'm1' }] });
+
+      const members = await client.assignMember('card1', 'm1');
+
+      expect(members).toEqual([{ id: 'm1' }]);
+      expect(mock.post).toHaveBeenCalledWith(
+        expect.stringContaining('/cards/card1/idMembers'),
+        null,
+        expect.objectContaining({ params: expect.objectContaining({ value: 'm1' }) })
+      );
+    });
+  });
+
+  describe('unassignMember', () => {
+    it('DELETEs /cards/{id}/idMembers/{memberId}', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.delete.mockResolvedValueOnce({ data: [] });
+
+      const members = await client.unassignMember('card1', 'm1');
+
+      expect(members).toEqual([]);
+      expect(mock.delete).toHaveBeenCalledWith(
+        expect.stringContaining('/cards/card1/idMembers/m1')
+      );
+    });
+  });
+
   describe('axios.create configuration', () => {
     it('creates axios instance with Trello base URL and credential params', () => {
       new TrelloClient({ apiKey: 'my-key', token: 'my-token' });
