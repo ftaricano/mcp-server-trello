@@ -12,6 +12,8 @@ import {
   TrelloCheckItem,
   CheckList,
   CheckListItem,
+  TrelloLabel,
+  TrelloMember,
 } from './types.js';
 import { createTrelloRateLimiters } from './rate-limiter.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
@@ -373,6 +375,34 @@ export class TrelloClient {
       const response = await this.axiosInstance.post(`/cards/${cardId}/actions/comments`, null, {
         params: { text },
       });
+      return response.data;
+    });
+  }
+
+  async getBoardLabels(boardId?: string): Promise<TrelloLabel[]> {
+    const effectiveBoardId = boardId || this.activeConfig.boardId || this.defaultBoardId;
+    if (!effectiveBoardId) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'boardId is required when no default board is configured'
+      );
+    }
+    return this.handleRequest(async () => {
+      const response = await this.axiosInstance.get(`/boards/${effectiveBoardId}/labels`);
+      return response.data;
+    });
+  }
+
+  async getBoardMembers(boardId?: string): Promise<TrelloMember[]> {
+    const effectiveBoardId = boardId || this.activeConfig.boardId || this.defaultBoardId;
+    if (!effectiveBoardId) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'boardId is required when no default board is configured'
+      );
+    }
+    return this.handleRequest(async () => {
+      const response = await this.axiosInstance.get(`/boards/${effectiveBoardId}/members`);
       return response.data;
     });
   }

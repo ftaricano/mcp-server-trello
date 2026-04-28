@@ -284,6 +284,64 @@ describe('TrelloClient', () => {
     });
   });
 
+  describe('getBoardLabels', () => {
+    it('GETs /boards/{id}/labels using activeBoard fallback', async () => {
+      const client = new TrelloClient({
+        apiKey: 'k',
+        token: 't',
+        defaultBoardId: 'board123',
+      });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({
+        data: [{ id: 'l1', name: 'Tarefa', color: 'green', idBoard: 'board123' }],
+      });
+
+      const labels = await client.getBoardLabels();
+
+      expect(mock.get).toHaveBeenCalledWith('/boards/board123/labels');
+      expect(labels[0].name).toBe('Tarefa');
+    });
+
+    it('accepts boardId override', async () => {
+      const client = new TrelloClient({
+        apiKey: 'k',
+        token: 't',
+        defaultBoardId: 'board123',
+      });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({ data: [] });
+
+      await client.getBoardLabels('boardX');
+
+      expect(mock.get).toHaveBeenCalledWith('/boards/boardX/labels');
+    });
+
+    it('throws when no board configured and no override', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+
+      await expect(client.getBoardLabels()).rejects.toThrow(/boardId is required/);
+    });
+  });
+
+  describe('getBoardMembers', () => {
+    it('GETs /boards/{id}/members', async () => {
+      const client = new TrelloClient({
+        apiKey: 'k',
+        token: 't',
+        defaultBoardId: 'board123',
+      });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({
+        data: [{ id: 'm1', fullName: 'Ferd', username: 'ferd' }],
+      });
+
+      const members = await client.getBoardMembers();
+
+      expect(mock.get).toHaveBeenCalledWith('/boards/board123/members');
+      expect(members[0].username).toBe('ferd');
+    });
+  });
+
   describe('axios.create configuration', () => {
     it('creates axios instance with Trello base URL and credential params', () => {
       new TrelloClient({ apiKey: 'my-key', token: 'my-token' });
