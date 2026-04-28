@@ -265,6 +265,25 @@ describe('TrelloClient', () => {
     });
   });
 
+  describe('addComment', () => {
+    it('addComment posts to /cards/{id}/actions/comments with text', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.post.mockResolvedValueOnce({
+        data: { id: 'a1', data: { text: 'hi' } },
+      });
+
+      const action = await client.addComment('card1', 'hi');
+
+      expect(action.id).toBe('a1');
+      expect(mock.post).toHaveBeenCalledWith(
+        expect.stringContaining('/cards/card1/actions/comments'),
+        null,
+        expect.objectContaining({ params: expect.objectContaining({ text: 'hi' }) })
+      );
+    });
+  });
+
   describe('axios.create configuration', () => {
     it('creates axios instance with Trello base URL and credential params', () => {
       new TrelloClient({ apiKey: 'my-key', token: 'my-token' });

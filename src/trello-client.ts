@@ -368,6 +368,15 @@ export class TrelloClient {
     });
   }
 
+  async addComment(cardId: string, text: string): Promise<TrelloAction> {
+    return this.handleRequest(async () => {
+      const response = await this.axiosInstance.post(`/cards/${cardId}/actions/comments`, null, {
+        params: { text },
+      });
+      return response.data;
+    });
+  }
+
   async getCard(
     cardId: string,
     includeMarkdown: boolean = false
