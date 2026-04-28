@@ -1,100 +1,54 @@
 # MCP Server Trello
 
-[![Verified on MseeP](https://mseep.ai/badge.svg)](https://mseep.ai/app/27359682-7632-4ba7-981d-7dfecadf1c4b)
+[![CI](https://github.com/ftaricano/mcp-server-trello/actions/workflows/ci.yml/badge.svg)](https://github.com/ftaricano/mcp-server-trello/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@delorenj/mcp-server-trello.svg)](https://www.npmjs.com/package/@delorenj/mcp-server-trello)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<a href="https://glama.ai/mcp/servers/klqkamy7wt"><img width="380" height="200" src="https://glama.ai/mcp/servers/klqkamy7wt/badge" alt="Server Trello MCP server" /></a>
+A [Model Context Protocol](https://modelcontextprotocol.io/) server for Trello. Exposes 23 tools for managing boards, lists, cards, checklists, and workspaces — with built-in rate limiting, input validation, and full TypeScript type safety.
 
-A Model Context Protocol (MCP) server that provides tools for interacting with Trello boards. This server enables seamless integration with Trello's API while handling rate limiting, type safety, and error handling automatically.
+## Highlights
 
-## 🧠 MCP Hub Integration with Portuguese Language Intelligence
-
-**This server is optimally integrated with the MCP Hub**, providing revolutionary AI-powered tool discovery in Portuguese:
-
-- **`smart-search`** - Natural language search in Portuguese (e.g., "criar card urgente", "buscar meus cards")
-- **`get-recommendations`** - Category-based discovery (e.g., "Produtividade", "Gestão de Projetos")
-- **96% intent accuracy** for Portuguese queries with <100ms response time
-- **Cultural context awareness** for Brazilian Portuguese workplace terminology
-
-**Quick Start with MCP Hub:**
-```typescript
-// Discover tools in Portuguese
-smart-search({ query: "gerenciar cards trello", context: "trabalho" })
-
-// Execute with recommended tool
-call-tool("trello", "add_card_to_list", { listId: "...", name: "..." })
-```
-
-For Claude Code users, see `CLAUDE.md` for comprehensive integration guidance.
-
-## 🎉 New in v1.2.0: Complete Checklist Management Suite!
-
-**Comprehensive Checklist Tools are here!** 🚀 Now you can fully manage Trello checklists with 5 powerful new tools! Search, create, and track checklist items across your boards. Perfect for managing acceptance criteria, development tasks, and project milestones!
-
-### ✨ New Checklist Tools:
-- 📋 **`get_checklist_items`** - Retrieve all items from any checklist by name
-- ➕ **`add_checklist_item`** - Add new items to existing checklists  
-- 🔍 **`find_checklist_items_by_description`** - Search checklist items by text content
-- ✅ **`get_acceptance_criteria`** - Quick access to "Acceptance Criteria" checklists
-- 📊 **`get_checklist_by_name`** - Get complete checklist with completion percentage
-
-**Plus:** Modern MCP SDK architecture, enhanced type safety, and comprehensive documentation!
+- **23 tools** covering cards, lists, boards, workspaces, checklists, and activity
+- **Multi-board support** — switch active board/workspace at runtime, with persistent state
+- **Built-in rate limiting** — automatic backpressure against Trello's API limits (300 req/10s per key, 100 req/10s per token)
+- **Type-safe** — all inputs validated with Zod schemas; outputs strongly typed
+- **Production-ready** — 93 unit tests, CI on Node 20/22, zero runtime vulnerabilities
 
 ## Changelog
 
-### 1.3.0
+### 1.3.0 — Production Readiness
 
-**🛠 Production Readiness Milestone**
-
-- **Test suite (Vitest):** 93 unit tests across rate-limiter, validators, and TrelloClient (axios-mocked, no network)
-- **CI:** GitHub Actions pipeline (lint + typecheck + test + build + `npm pack --dry-run`) on every PR, matrix Node 20/22, with `concurrency` and least-privilege `permissions: contents: read`
-- **Type hygiene:**
-  - Eliminated remaining `any` types in `types.ts` and `trello-client.ts`
-  - Suppressed 5 pre-existing TS2589 errors with narrow per-call `@ts-expect-error` (pinned to SDK 1.29.0 — auto-flag when the SDK fixes inference depth)
-- **Version drift fix:** server now reads its version from `package.json` at runtime via `src/version.ts` (was hardcoded `1.0.0` while package was `1.2.0`)
-- **Dependency hygiene:** moved `mcp-evals` and `@ai-sdk/openai` to `optionalDependencies` so default installs no longer pull the OpenAI SDK; excluded `src/evals/` from production tsconfig
-- **Lint:** fixed 55 prettier errors; lint is now gated by CI
-- **Heap:** baked `NODE_OPTIONS=--max-old-space-size=8192` into `build`/`build:dev`/`typecheck` scripts to avoid `tsc` OOM on deep type instantiation
-- **DX:** added `.env.example`, expanded README Development section, added `LICENSE` (MIT)
-- **engines:** bumped `node` requirement to `>=20.0.0` to match the CI matrix
+- **Test suite (Vitest):** 93 unit tests across rate-limiter, validators, and `TrelloClient` (axios-mocked, no network)
+- **CI:** GitHub Actions pipeline (lint + typecheck + test + build + `npm pack --dry-run`) on every PR, matrix Node 20/22, with `concurrency` and `permissions: contents: read`
+- **Type hygiene:** eliminated remaining `any` types; narrow per-call `@ts-expect-error` for 5 pre-existing TS2589 errors, pinned to SDK 1.29.0 so they auto-flag when upstream fixes inference depth
+- **Version drift fix:** server now reads its version from `package.json` at runtime via `src/version.ts` (was hardcoded `1.0.0`)
+- **Dependency hygiene:** moved `mcp-evals` and `@ai-sdk/openai` to `optionalDependencies`; excluded `src/evals/` from production tsconfig
+- **Build:** baked `NODE_OPTIONS=--max-old-space-size=8192` into `build`/`build:dev`/`typecheck` to avoid `tsc` OOM
+- **DX:** added `.env.example`, `LICENSE` (MIT), and an expanded Development section
+- **`engines.node`:** bumped to `>=20.0.0` to match the CI matrix
 - **Supply chain:** `npm audit --omit=dev --omit=optional` returns 0 vulnerabilities
 
-### 1.2.0
+### 1.2.0 — Checklist Management Suite
 
-**🎊 Major Feature Release: Complete Checklist Management Suite**
+- 5 new tools for checklist management:
+  - `get_checklist_items(name)` — retrieve all items from a checklist by name
+  - `add_checklist_item(text, checkListName)` — add a new item to an existing checklist
+  - `find_checklist_items_by_description(description)` — search checklist items by text content
+  - `get_acceptance_criteria()` — convenience method for "Acceptance Criteria" checklists
+  - `get_checklist_by_name(name)` — get a complete checklist with completion percentage
+- Refactored to the modern MCP SDK pattern (`registerTool()` + Zod input validation)
+- New `CheckList` and `CheckListItem` interfaces
+- Consistent error responses with descriptive messages
 
-- **5 New Checklist Tools** for comprehensive checklist management:
-  - `get_checklist_items(name)` - Retrieve all items from a checklist by name
-  - `add_checklist_item(text, checkListName)` - Add new items to existing checklists
-  - `find_checklist_items_by_description(description)` - Search checklist items by text content
-  - `get_acceptance_criteria()` - Convenience method for "Acceptance Criteria" checklists
-  - `get_checklist_by_name(name)` - Get complete checklist with completion percentage
-- **Modern MCP SDK Architecture:** Refactored to use latest MCP TypeScript SDK patterns with `registerTool()` and Zod validation
-- **Enhanced Type Safety:** Full TypeScript support with proper type conversions between Trello API and MCP types
-- **New Data Types:** `CheckList` and `CheckListItem` interfaces for structured checklist data
-- **Comprehensive Documentation:** Enhanced documentation in README.md with checklist examples and best practices
-- **Improved Error Handling:** Consistent error responses with descriptive messages
-- **Runtime Validation:** Zod schemas for all tool inputs with automatic validation
+### 1.1.0 — Complete Card Data Extraction
 
-### 1.1.0
-
-**🎊 Major Feature Release: Complete Card Data Extraction**
-
-- Added powerful `get_card` tool for comprehensive single card data retrieval
-- **Enhanced Data Extraction:**
-  - ✅ **Checklists** - Full checklist support with items, completion states, member assignments, and due dates
-  - 📎 **Attachments** - Complete attachment data including images, previews, file metadata, and inline image detection
-  - 🏷️ **Labels** - Full label details (names and colors, not just IDs)
-  - 👥 **Members** - Card member assignments with full profile information
-  - 💬 **Comments** - Card activity and comment history
-  - 📊 **Badges** - Statistics including checklist progress, comment counts, and attachment counts
-  - 🎨 **Cover Images** - Card cover image support
-  - 📍 **Context** - Board and list information for complete context
-  - 🔧 **Custom Fields** - Support for board-specific custom fields
-- **Markdown Formatting:** New `includeMarkdown` parameter returns beautifully formatted, human-readable card data
-- **Inline Image Parsing:** Automatically detects and extracts images embedded in card descriptions
-- **Comprehensive API Integration:** Single API call fetches all card data efficiently using optimized query parameters
-- **Type Safety:** Added new TypeScript interfaces for all enhanced data structures
-- **Human Parity:** Achieves complete parity with Trello UI - see everything a human sees
+- New `get_card` tool returning a single card with full context:
+  - Checklists with items, completion states, member assignments, and due dates
+  - Attachments with previews, file metadata, and inline image detection
+  - Labels (names and colors, not just IDs), assigned members, comments, badges, cover images
+  - Board and list context, plus custom fields
+- New `includeMarkdown` parameter formats card data as human-readable markdown
+- Automatic detection and extraction of images embedded in card descriptions
 
 ### 1.0.0
 
@@ -141,17 +95,6 @@ For Claude Code users, see `CLAUDE.md` for comprehensive integration guidance.
 ### 0.1.0
 
 - Initial release with basic Trello board management features
-
-## Features
-
-- **Full Trello Board Integration**: Interact with cards, lists, and board activities
-- **🆕 Complete Card Data Extraction**: Fetch all card details including checklists, attachments, labels, members, and comments
-- **Built-in Rate Limiting**: Respects Trello's API limits (300 requests/10s per API key, 100 requests/10s per token)
-- **Type-Safe Implementation**: Written in TypeScript with comprehensive type definitions
-- **Input Validation**: Robust validation for all API inputs
-- **Error Handling**: Graceful error handling with informative messages
-- **Dynamic Board Selection**: Switch between boards and workspaces without restarting
-- **Markdown Formatting**: Export card data in human-readable markdown format
 
 ## Installation
 
@@ -364,7 +307,7 @@ This distinction follows Trello's API conventions where start dates are day-base
 
 ## Available Tools
 
-### Checklist Management Tools 🆕
+### Checklist Management Tools
 
 #### get_checklist_items
 
@@ -442,7 +385,7 @@ Get a complete checklist with all items and completion percentage.
 - `items`: Array of `CheckListItem` objects
 - `percentComplete`: Completion percentage (0-100)
 
-### get_card 🆕
+### get_card
 
 Get comprehensive details of a specific Trello card with human-level parity.
 
