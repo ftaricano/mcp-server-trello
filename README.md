@@ -41,6 +41,23 @@ For Claude Code users, see `CLAUDE.md` for comprehensive integration guidance.
 
 ## Changelog
 
+### 1.3.0
+
+**🛠 Production Readiness Milestone**
+
+- **Test suite (Vitest):** 93 unit tests across rate-limiter, validators, and TrelloClient (axios-mocked, no network)
+- **CI:** GitHub Actions pipeline (lint + typecheck + test + build + `npm pack --dry-run`) on every PR, matrix Node 20/22, with `concurrency` and least-privilege `permissions: contents: read`
+- **Type hygiene:**
+  - Eliminated remaining `any` types in `types.ts` and `trello-client.ts`
+  - Suppressed 5 pre-existing TS2589 errors with narrow per-call `@ts-expect-error` (pinned to SDK 1.29.0 — auto-flag when the SDK fixes inference depth)
+- **Version drift fix:** server now reads its version from `package.json` at runtime via `src/version.ts` (was hardcoded `1.0.0` while package was `1.2.0`)
+- **Dependency hygiene:** moved `mcp-evals` and `@ai-sdk/openai` to `optionalDependencies` so default installs no longer pull the OpenAI SDK; excluded `src/evals/` from production tsconfig
+- **Lint:** fixed 55 prettier errors; lint is now gated by CI
+- **Heap:** baked `NODE_OPTIONS=--max-old-space-size=8192` into `build`/`build:dev`/`typecheck` scripts to avoid `tsc` OOM on deep type instantiation
+- **DX:** added `.env.example`, expanded README Development section, added `LICENSE` (MIT)
+- **engines:** bumped `node` requirement to `>=20.0.0` to match the CI matrix
+- **Supply chain:** `npm audit --omit=dev --omit=optional` returns 0 vulnerabilities
+
 ### 1.2.0
 
 **🎊 Major Feature Release: Complete Checklist Management Suite**
