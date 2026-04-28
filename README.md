@@ -16,6 +16,13 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server for Trello. 
 
 ## Changelog
 
+### 1.4.1 — Keychain credential resolution
+
+- CLI now reads credentials from the macOS Keychain when `TRELLO_KEYCHAIN_PREFIX` is set
+- Resolution order: process env → `.env` → keychain
+- Reads `<PREFIX>_API_KEY`, `<PREFIX>_TOKEN`, `<PREFIX>_BOARD_ID` via the `security` CLI; non-darwin platforms are no-ops
+- Failures are silent (missing keychain entries fall through, never throw)
+
 ### 1.4.0 — Local CLI
 
 - New `trello` CLI binary for local agent use, sharing the existing `TrelloClient` and `.env` contract with the MCP server
@@ -312,7 +319,23 @@ This allows you to work with multiple boards and workspaces without restarting t
 
 ## CLI Usage
 
-The package also installs a `trello` CLI for local agent use. Same env-var contract as the MCP server (`TRELLO_API_KEY`, `TRELLO_TOKEN`, optional `TRELLO_BOARD_ID`); a `.env` file in the cwd is loaded automatically.
+The package also installs a `trello` CLI for local agent use.
+
+**Credential resolution order** (first match wins):
+1. Process env (`TRELLO_API_KEY`, `TRELLO_TOKEN`, `TRELLO_BOARD_ID`)
+2. `.env` file in the current working directory (auto-loaded via `dotenv`)
+3. macOS Keychain (when `TRELLO_KEYCHAIN_PREFIX` is set; reads `<PREFIX>_API_KEY`, `<PREFIX>_TOKEN`, `<PREFIX>_BOARD_ID` via the `security` CLI)
+
+**Keychain example (macOS):**
+```bash
+# One-time setup — store credentials in keychain
+security add-generic-password -s TRELLO_API_KEY -a $USER -w 'your-key'
+security add-generic-password -s TRELLO_TOKEN   -a $USER -w 'your-token'
+
+# Then run with the prefix env set (add to your shell rc):
+export TRELLO_KEYCHAIN_PREFIX=TRELLO
+trello list-boards --md
+```
 
 ```bash
 # Discover boards
