@@ -6,7 +6,8 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "bin": {
-    "mcp-server-trello": "./build/index.js"
+    "mcp-server-trello": "./build/index.js",
+    "trello": "./build/cli.js"
   },
   "scripts": {
     "build:dev": "NODE_OPTIONS='--max-old-space-size=8192' tsc && chmod +x build/index.js",
@@ -47,6 +48,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "axios": "^1.6.2",
+    "commander": "^12.1.0",
     "dotenv": "^17.2.1",
     "zod": "^3.22.4"
   },
