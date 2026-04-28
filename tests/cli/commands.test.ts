@@ -353,3 +353,73 @@ describe('cli cards list <listId>', () => {
     expect(out).toBe('No cards.\n');
   });
 });
+
+import { boardLabels, boardMembers } from '../../src/cli/commands/boards.js';
+
+describe('cli board labels/members', () => {
+  it('boardLabels returns JSON of all labels', async () => {
+    const client = {
+      getBoardLabels: vi
+        .fn()
+        .mockResolvedValue([{ id: 'l1', name: 'Tarefa', color: 'green', idBoard: 'b' }]),
+    };
+    const out = await boardLabels(client as unknown as TrelloClient, { md: false });
+    expect(out).toContain('"name": "Tarefa"');
+  });
+
+  it('boardLabels accepts --board override', async () => {
+    const client = { getBoardLabels: vi.fn().mockResolvedValue([]) };
+    await boardLabels(client as unknown as TrelloClient, { md: false, board: 'bX' });
+    expect(client.getBoardLabels).toHaveBeenCalledWith('bX');
+  });
+
+  it('boardLabels --md renders list with id and color', async () => {
+    const client = {
+      getBoardLabels: vi
+        .fn()
+        .mockResolvedValue([{ id: 'l1', name: 'Tarefa', color: 'green', idBoard: 'b' }]),
+    };
+    const out = await boardLabels(client as unknown as TrelloClient, { md: true });
+    expect(out).toContain('Tarefa');
+    expect(out).toContain('l1');
+    expect(out).toContain('green');
+  });
+
+  it('boardLabels --md with no color shows "no color"', async () => {
+    const client = {
+      getBoardLabels: vi
+        .fn()
+        .mockResolvedValue([{ id: 'l1', name: 'Tarefa', color: null, idBoard: 'b' }]),
+    };
+    const out = await boardLabels(client as unknown as TrelloClient, { md: true });
+    expect(out).toContain('no color');
+  });
+
+  it('boardMembers returns JSON of all members', async () => {
+    const client = {
+      getBoardMembers: vi
+        .fn()
+        .mockResolvedValue([{ id: 'm1', fullName: 'Ferd', username: 'ferd' }]),
+    };
+    const out = await boardMembers(client as unknown as TrelloClient, { md: false });
+    expect(out).toContain('"username": "ferd"');
+  });
+
+  it('boardMembers --md renders a list', async () => {
+    const client = {
+      getBoardMembers: vi
+        .fn()
+        .mockResolvedValue([{ id: 'm1', fullName: 'Ferd', username: 'ferd' }]),
+    };
+    const out = await boardMembers(client as unknown as TrelloClient, { md: true });
+    expect(out).toContain('Ferd');
+    expect(out).toContain('@ferd');
+    expect(out).toContain('m1');
+  });
+
+  it('boardLabels returns "No labels." for empty when md=true', async () => {
+    const client = { getBoardLabels: vi.fn().mockResolvedValue([]) };
+    const out = await boardLabels(client as unknown as TrelloClient, { md: true });
+    expect(out).toBe('No labels.\n');
+  });
+});

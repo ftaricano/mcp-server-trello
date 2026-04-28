@@ -3,7 +3,13 @@ import 'dotenv/config';
 import { Command } from 'commander';
 import { TrelloClient } from './trello-client.js';
 import { VERSION } from './version.js';
-import { listBoards, setBoard, activeBoard } from './cli/commands/boards.js';
+import {
+  listBoards,
+  setBoard,
+  activeBoard,
+  boardLabels,
+  boardMembers,
+} from './cli/commands/boards.js';
 import { lists, cardsInList } from './cli/commands/lists.js';
 import {
   addCard,
@@ -163,5 +169,21 @@ cards
   .option('--board <id>', 'Override board id')
   .option('--md', 'Render as markdown', false)
   .action((listId, opts) => run(cardsInList, listId, opts));
+
+const board = program.command('board').description('Board metadata operations');
+
+board
+  .command('labels')
+  .description('List labels on the active (or --board) board')
+  .option('--board <id>', 'Override board id')
+  .option('--md', 'Render as markdown', false)
+  .action(opts => run(boardLabels, opts));
+
+board
+  .command('members')
+  .description('List members on the active (or --board) board')
+  .option('--board <id>', 'Override board id')
+  .option('--md', 'Render as markdown', false)
+  .action(opts => run(boardMembers, opts));
 
 program.parseAsync(process.argv);
