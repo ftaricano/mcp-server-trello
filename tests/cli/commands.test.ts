@@ -211,3 +211,76 @@ describe('cli cards commands', () => {
     expect(out).toBe('No cards assigned.\n');
   });
 });
+
+import {
+  commentCard,
+  archiveCard as archiveCardCmd,
+  attachImage,
+} from '../../src/cli/commands/cards.js';
+
+describe('cli card comment/archive/attach', () => {
+  it('commentCard calls addComment with text', async () => {
+    const client = {
+      addComment: vi.fn().mockResolvedValue({ id: 'a1', data: { text: 'hi' } }),
+    };
+    const out = await commentCard(client as unknown as TrelloClient, 'c1', 'hi', { md: false });
+    expect(client.addComment).toHaveBeenCalledWith('c1', 'hi');
+    expect(out).toContain('"id": "a1"');
+  });
+
+  it('commentCard renders markdown when md=true', async () => {
+    const client = {
+      addComment: vi.fn().mockResolvedValue({ id: 'a1', data: { text: 'hi' } }),
+    };
+    const out = await commentCard(client as unknown as TrelloClient, 'c1', 'hi', { md: true });
+    expect(out).toContain('hi');
+    expect(out).toContain('a1');
+  });
+
+  it('archiveCardCmd calls archiveCard with cardId', async () => {
+    const client = {
+      archiveCard: vi.fn().mockResolvedValue({ id: 'c1', closed: true }),
+    };
+    await archiveCardCmd(client as unknown as TrelloClient, 'c1', { md: false });
+    expect(client.archiveCard).toHaveBeenCalledWith(undefined, 'c1');
+  });
+
+  it('archiveCardCmd respects --board override', async () => {
+    const client = {
+      archiveCard: vi.fn().mockResolvedValue({ id: 'c1', closed: true }),
+    };
+    await archiveCardCmd(client as unknown as TrelloClient, 'c1', { md: false, board: 'b9' });
+    expect(client.archiveCard).toHaveBeenCalledWith('b9', 'c1');
+  });
+
+  it('attachImage calls attachImageToCard with url + optional name', async () => {
+    const client = {
+      attachImageToCard: vi.fn().mockResolvedValue({ id: 'a1', url: 'u' }),
+    };
+    await attachImage(client as unknown as TrelloClient, 'c1', 'https://img.example/x.png', {
+      md: false,
+      name: 'Cover',
+    });
+    expect(client.attachImageToCard).toHaveBeenCalledWith(
+      undefined,
+      'c1',
+      'https://img.example/x.png',
+      'Cover'
+    );
+  });
+
+  it('attachImage works without --name', async () => {
+    const client = {
+      attachImageToCard: vi.fn().mockResolvedValue({ id: 'a1', url: 'u' }),
+    };
+    await attachImage(client as unknown as TrelloClient, 'c1', 'https://img.example/x.png', {
+      md: false,
+    });
+    expect(client.attachImageToCard).toHaveBeenCalledWith(
+      undefined,
+      'c1',
+      'https://img.example/x.png',
+      undefined
+    );
+  });
+});

@@ -94,3 +94,37 @@ export async function myCards(client: TrelloClient, opts: BaseOpts): Promise<str
   }
   return formatJson(cards);
 }
+
+export async function commentCard(
+  client: TrelloClient,
+  cardId: string,
+  text: string,
+  opts: BaseOpts
+): Promise<string> {
+  const action = await client.addComment(cardId, text);
+  if (opts.md) {
+    return `Comment added (\`${action.id}\`): ${text}\n`;
+  }
+  return formatJson(action);
+}
+
+export async function archiveCard(
+  client: TrelloClient,
+  cardId: string,
+  opts: BaseOpts
+): Promise<string> {
+  const card = await client.archiveCard(opts.board, cardId);
+  return opts.md ? `Card archived (\`${card.id}\`)\n` : formatJson(card);
+}
+
+export async function attachImage(
+  client: TrelloClient,
+  cardId: string,
+  imageUrl: string,
+  opts: BaseOpts & { name?: string }
+): Promise<string> {
+  const attachment = await client.attachImageToCard(opts.board, cardId, imageUrl, opts.name);
+  return opts.md
+    ? `Attachment added (\`${attachment.id}\`)\n${attachment.url}\n`
+    : formatJson(attachment);
+}
