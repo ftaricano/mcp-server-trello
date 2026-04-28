@@ -10,8 +10,8 @@
     "trello": "./build/cli.js"
   },
   "scripts": {
-    "build:dev": "NODE_OPTIONS='--max-old-space-size=8192' tsc && chmod +x build/index.js",
-    "build": "NODE_OPTIONS='--max-old-space-size=8192' tsc && terser build/index.js --compress drop_console=true --mangle --output build/index.js && chmod +x build/index.js",
+    "build:dev": "NODE_OPTIONS='--max-old-space-size=8192' tsc && chmod +x build/index.js build/cli.js",
+    "build": "NODE_OPTIONS='--max-old-space-size=8192' tsc && terser build/index.js --compress drop_console=true --mangle --output build/index.js && chmod +x build/index.js build/cli.js",
     "start": "node build/index.js",
     "dev": "ts-node --esm src/index.ts",
     "lint": "eslint . --ext .ts",
