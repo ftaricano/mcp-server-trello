@@ -14,6 +14,8 @@ import {
   commentCard,
   archiveCard,
   attachImage,
+  assignMember,
+  unassignMember,
 } from './cli/commands/cards.js';
 import { loadKeychainCredentials } from './cli/keychain.js';
 
@@ -134,6 +136,18 @@ card
   .option('--board <id>', 'Override board id')
   .option('--md', 'Render as markdown', false)
   .action((cardId, imageUrl, opts) => run(attachImage, cardId, imageUrl, opts));
+
+card
+  .command('assign <cardId> <memberId>')
+  .description('Assign a member to a card')
+  .option('--md', 'Render as markdown', false)
+  .action((cardId, memberId, opts) => run(assignMember, cardId, memberId, opts));
+
+card
+  .command('unassign <cardId> <memberId>')
+  .description('Unassign a member from a card')
+  .option('--md', 'Render as markdown', false)
+  .action((cardId, memberId, opts) => run(unassignMember, cardId, memberId, opts));
 
 const cards = program.command('cards').description('Card list operations');
 

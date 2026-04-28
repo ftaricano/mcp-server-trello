@@ -284,3 +284,39 @@ describe('cli card comment/archive/attach', () => {
     );
   });
 });
+
+import {
+  assignMember as assignMemberCmd,
+  unassignMember as unassignMemberCmd,
+} from '../../src/cli/commands/cards.js';
+
+describe('cli card assign/unassign', () => {
+  it('assignMember calls client.assignMember', async () => {
+    const client = { assignMember: vi.fn().mockResolvedValue([{ id: 'm1' }]) };
+    const out = await assignMemberCmd(client as unknown as TrelloClient, 'c1', 'm1', { md: false });
+    expect(client.assignMember).toHaveBeenCalledWith('c1', 'm1');
+    expect(out).toContain('"id": "m1"');
+  });
+
+  it('assignMember --md produces a confirmation', async () => {
+    const client = { assignMember: vi.fn().mockResolvedValue([{ id: 'm1' }]) };
+    const out = await assignMemberCmd(client as unknown as TrelloClient, 'c1', 'm1', { md: true });
+    expect(out).toMatch(/Assigned/);
+    expect(out).toContain('m1');
+    expect(out).toContain('c1');
+  });
+
+  it('unassignMember calls client.unassignMember', async () => {
+    const client = { unassignMember: vi.fn().mockResolvedValue([]) };
+    await unassignMemberCmd(client as unknown as TrelloClient, 'c1', 'm1', { md: false });
+    expect(client.unassignMember).toHaveBeenCalledWith('c1', 'm1');
+  });
+
+  it('unassignMember --md produces a confirmation', async () => {
+    const client = { unassignMember: vi.fn().mockResolvedValue([]) };
+    const out = await unassignMemberCmd(client as unknown as TrelloClient, 'c1', 'm1', {
+      md: true,
+    });
+    expect(out).toMatch(/Unassigned/);
+  });
+});

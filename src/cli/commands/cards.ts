@@ -128,3 +128,25 @@ export async function attachImage(
     ? `Attachment added (\`${attachment.id}\`)\n${attachment.url}\n`
     : formatJson(attachment);
 }
+
+export async function assignMember(
+  client: TrelloClient,
+  cardId: string,
+  memberId: string,
+  opts: BaseOpts
+): Promise<string> {
+  const members = await client.assignMember(cardId, memberId);
+  return opts.md ? `Assigned member \`${memberId}\` to card \`${cardId}\`\n` : formatJson(members);
+}
+
+export async function unassignMember(
+  client: TrelloClient,
+  cardId: string,
+  memberId: string,
+  opts: BaseOpts
+): Promise<string> {
+  const members = await client.unassignMember(cardId, memberId);
+  return opts.md
+    ? `Unassigned member \`${memberId}\` from card \`${cardId}\`\n`
+    : formatJson(members);
+}
