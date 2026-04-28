@@ -16,6 +16,12 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server for Trello. 
 
 ## Changelog
 
+### 1.5.0 — CLI coverage expansion
+
+- New CLI commands: `card comment`, `card archive`, `card attach`, `card assign`, `card unassign`, `cards list <listId>`, `board labels`, `board members`
+- Five new `TrelloClient` methods backing them: `addComment`, `getBoardLabels`, `getBoardMembers`, `assignMember`, `unassignMember`
+- Together they cover ~95% of the operational flow without falling back to direct REST calls
+
 ### 1.4.1 — Keychain credential resolution
 
 - CLI now reads credentials from the macOS Keychain when `TRELLO_KEYCHAIN_PREFIX` is set
@@ -338,23 +344,28 @@ trello list-boards --md
 ```
 
 ```bash
-# Discover boards
+# Boards & lists
 trello list-boards --md
-
-# Pin a board for subsequent commands (persisted to ~/.trello-mcp/config.json)
-trello set-board <boardId>
-
-# Inspect lists
+trello set-board <boardId>           # pin (persisted to ~/.trello-mcp/config.json)
+trello active-board --md
 trello lists --md
+trello board labels --md             # all labels on the active board
+trello board members --md            # all members on the active board
 
-# Card lifecycle
+# Cards
 trello card add <listId> "Task name" --desc "details" --due 2026-05-01T12:00:00Z
 trello card update <cardId> --name "Renamed" --done
 trello card move <cardId> <listId>
 trello card get <cardId> --md
+trello card archive <cardId>
+trello card comment <cardId> "Status update"
+trello card attach <cardId> https://img.example/cover.png --name "Cover"
+trello card assign <cardId> <memberId>
+trello card unassign <cardId> <memberId>
 
-# Your assigned cards
-trello cards mine --md
+# Card lists
+trello cards mine --md               # cards assigned to you
+trello cards list <listId> --md      # cards in a specific list
 ```
 
 Default output is JSON (one object/array per command) for agent consumption. Add `--md` for human-readable markdown.
