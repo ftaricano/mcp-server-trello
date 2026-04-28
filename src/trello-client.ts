@@ -112,6 +112,13 @@ export class TrelloClient {
   }
 
   /**
+   * Get the current active board ID (method form for CLI consumers)
+   */
+  public getActiveBoardId(): string | undefined {
+    return this.activeConfig.boardId;
+  }
+
+  /**
    * Set the active board
    */
   async setActiveBoard(boardId: string): Promise<TrelloBoard> {

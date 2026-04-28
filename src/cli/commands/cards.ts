@@ -1,0 +1,96 @@
+import type { TrelloClient } from '../../trello-client.js';
+import { formatJson, formatCardMarkdown } from '../output.js';
+
+interface BaseOpts {
+  md: boolean;
+  board?: string;
+}
+
+interface AddOpts extends BaseOpts {
+  desc?: string;
+  due?: string;
+  start?: string;
+  labels?: string;
+}
+
+interface UpdateOpts extends BaseOpts {
+  name?: string;
+  desc?: string;
+  due?: string;
+  start?: string;
+  done?: boolean;
+  labels?: string;
+}
+
+function parseLabels(labels: string | undefined): string[] | undefined {
+  if (!labels) return undefined;
+  return labels
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+export async function addCard(
+  client: TrelloClient,
+  listId: string,
+  name: string,
+  opts: AddOpts
+): Promise<string> {
+  const card = await client.addCard(opts.board, {
+    listId,
+    name,
+    description: opts.desc,
+    dueDate: opts.due,
+    start: opts.start,
+    labels: parseLabels(opts.labels),
+  });
+  return opts.md ? formatCardMarkdown(card) : formatJson(card);
+}
+
+export async function updateCard(
+  client: TrelloClient,
+  cardId: string,
+  opts: UpdateOpts
+): Promise<string> {
+  const card = await client.updateCard(opts.board, {
+    cardId,
+    name: opts.name,
+    description: opts.desc,
+    dueDate: opts.due,
+    start: opts.start,
+    dueComplete: opts.done,
+    labels: parseLabels(opts.labels),
+  });
+  return opts.md ? formatCardMarkdown(card) : formatJson(card);
+}
+
+export async function moveCard(
+  client: TrelloClient,
+  cardId: string,
+  listId: string,
+  opts: BaseOpts
+): Promise<string> {
+  const card = await client.moveCard(opts.board, cardId, listId);
+  return opts.md ? formatCardMarkdown(card) : formatJson(card);
+}
+
+export async function getCard(
+  client: TrelloClient,
+  cardId: string,
+  opts: BaseOpts
+): Promise<string> {
+  const result = await client.getCard(cardId, opts.md);
+  if (opts.md) {
+    return typeof result === 'string' ? result : formatCardMarkdown(result);
+  }
+  return formatJson(result);
+}
+
+export async function myCards(client: TrelloClient, opts: BaseOpts): Promise<string> {
+  const cards = await client.getMyCards();
+  if (opts.md) {
+    if (cards.length === 0) return 'No cards assigned.\n';
+    return cards.map(c => `- **${c.name}** (\`${c.id}\`) — list \`${c.idList}\``).join('\n') + '\n';
+  }
+  return formatJson(cards);
+}

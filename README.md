@@ -16,6 +16,20 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server for Trello. 
 
 ## Changelog
 
+### 1.4.0 — Local CLI
+
+- New `trello` CLI binary for local agent use, sharing the existing `TrelloClient` and `.env` contract with the MCP server
+- 8 commands cover the create/update/move/read flow:
+  - `list-boards`, `set-board <id>`, `active-board`
+  - `lists [--board <id>]`
+  - `card add <listId> <name> [--desc --due --start --labels --board]`
+  - `card update <cardId> [--name --desc --due --start --done --labels --board]`
+  - `card move <cardId> <listId> [--board]`
+  - `card get <cardId>`
+  - `cards mine`
+- JSON output by default (agent-friendly); `--md` flag for human-readable markdown
+- Exit codes: 0 success, 1 missing config / validation error, 2 Trello API error
+
 ### 1.3.0 — Production Readiness
 
 - **Test suite (Vitest):** 93 unit tests across rate-limiter, validators, and `TrelloClient` (axios-mocked, no network)
@@ -295,6 +309,34 @@ This allows you to work with multiple boards and workspaces without restarting t
   arguments: {}
 }
 ```
+
+## CLI Usage
+
+The package also installs a `trello` CLI for local agent use. Same env-var contract as the MCP server (`TRELLO_API_KEY`, `TRELLO_TOKEN`, optional `TRELLO_BOARD_ID`); a `.env` file in the cwd is loaded automatically.
+
+```bash
+# Discover boards
+trello list-boards --md
+
+# Pin a board for subsequent commands (persisted to ~/.trello-mcp/config.json)
+trello set-board <boardId>
+
+# Inspect lists
+trello lists --md
+
+# Card lifecycle
+trello card add <listId> "Task name" --desc "details" --due 2026-05-01T12:00:00Z
+trello card update <cardId> --name "Renamed" --done
+trello card move <cardId> <listId>
+trello card get <cardId> --md
+
+# Your assigned cards
+trello cards mine --md
+```
+
+Default output is JSON (one object/array per command) for agent consumption. Add `--md` for human-readable markdown.
+
+Exit codes: `0` success, `1` missing config / validation error, `2` Trello API error. Errors are written to stderr; results to stdout.
 
 ## Date Format Guidelines
 
