@@ -342,6 +342,38 @@ describe('TrelloClient', () => {
     });
   });
 
+  describe('assignMember', () => {
+    it('POSTs to /cards/{id}/idMembers with value=memberId', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.post.mockResolvedValueOnce({ data: [{ id: 'm1' }] });
+
+      const members = await client.assignMember('card1', 'm1');
+
+      expect(members).toEqual([{ id: 'm1' }]);
+      expect(mock.post).toHaveBeenCalledWith(
+        expect.stringContaining('/cards/card1/idMembers'),
+        null,
+        expect.objectContaining({ params: expect.objectContaining({ value: 'm1' }) })
+      );
+    });
+  });
+
+  describe('unassignMember', () => {
+    it('DELETEs /cards/{id}/idMembers/{memberId}', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.delete.mockResolvedValueOnce({ data: [] });
+
+      const members = await client.unassignMember('card1', 'm1');
+
+      expect(members).toEqual([]);
+      expect(mock.delete).toHaveBeenCalledWith(
+        expect.stringContaining('/cards/card1/idMembers/m1')
+      );
+    });
+  });
+
   describe('axios.create configuration', () => {
     it('creates axios instance with Trello base URL and credential params', () => {
       new TrelloClient({ apiKey: 'my-key', token: 'my-token' });

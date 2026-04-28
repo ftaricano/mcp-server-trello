@@ -407,6 +407,22 @@ export class TrelloClient {
     });
   }
 
+  async assignMember(cardId: string, memberId: string): Promise<TrelloMember[]> {
+    return this.handleRequest(async () => {
+      const response = await this.axiosInstance.post(`/cards/${cardId}/idMembers`, null, {
+        params: { value: memberId },
+      });
+      return response.data;
+    });
+  }
+
+  async unassignMember(cardId: string, memberId: string): Promise<TrelloMember[]> {
+    return this.handleRequest(async () => {
+      const response = await this.axiosInstance.delete(`/cards/${cardId}/idMembers/${memberId}`);
+      return response.data;
+    });
+  }
+
   async getCard(
     cardId: string,
     includeMarkdown: boolean = false
