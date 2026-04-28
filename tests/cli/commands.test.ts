@@ -87,3 +87,127 @@ describe('cli lists command', () => {
     expect(out).toBe('No lists.\n');
   });
 });
+
+import { addCard, updateCard, moveCard, getCard, myCards } from '../../src/cli/commands/cards.js';
+
+describe('cli cards commands', () => {
+  it('addCard passes name + listId + optional fields', async () => {
+    const client = {
+      addCard: vi.fn().mockResolvedValue({
+        id: 'c1',
+        name: 'X',
+        desc: 'body',
+        idList: 'l1',
+        due: null,
+        url: 'u',
+      }),
+    };
+    await addCard(client as unknown as TrelloClient, 'l1', 'My Task', {
+      md: false,
+      desc: 'body',
+      due: '2026-05-01T12:00:00Z',
+      start: '2026-04-30',
+      labels: 'lab1,lab2',
+    });
+    expect(client.addCard).toHaveBeenCalledWith(undefined, {
+      listId: 'l1',
+      name: 'My Task',
+      description: 'body',
+      dueDate: '2026-05-01T12:00:00Z',
+      start: '2026-04-30',
+      labels: ['lab1', 'lab2'],
+    });
+  });
+
+  it('addCard --board overrides board param', async () => {
+    const client = {
+      addCard: vi
+        .fn()
+        .mockResolvedValue({ id: 'c1', name: 'X', desc: '', idList: 'l1', due: null, url: 'u' }),
+    };
+    await addCard(client as unknown as TrelloClient, 'l1', 'X', { md: false, board: 'b9' });
+    expect(client.addCard).toHaveBeenCalledWith('b9', expect.any(Object));
+  });
+
+  it('updateCard maps --done to dueComplete: true', async () => {
+    const client = {
+      updateCard: vi
+        .fn()
+        .mockResolvedValue({ id: 'c1', name: 'X', desc: '', idList: 'l1', due: null, url: 'u' }),
+    };
+    await updateCard(client as unknown as TrelloClient, 'c1', { md: false, done: true });
+    expect(client.updateCard).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({
+        cardId: 'c1',
+        dueComplete: true,
+      })
+    );
+  });
+
+  it('updateCard passes labels as array', async () => {
+    const client = {
+      updateCard: vi
+        .fn()
+        .mockResolvedValue({ id: 'c1', name: 'X', desc: '', idList: 'l1', due: null, url: 'u' }),
+    };
+    await updateCard(client as unknown as TrelloClient, 'c1', { md: false, labels: 'a,b,c' });
+    expect(client.updateCard).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({
+        labels: ['a', 'b', 'c'],
+      })
+    );
+  });
+
+  it('moveCard calls moveCard with cardId + listId', async () => {
+    const client = {
+      moveCard: vi
+        .fn()
+        .mockResolvedValue({ id: 'c1', name: 'X', desc: '', idList: 'l2', due: null, url: 'u' }),
+    };
+    await moveCard(client as unknown as TrelloClient, 'c1', 'l2', { md: false });
+    expect(client.moveCard).toHaveBeenCalledWith(undefined, 'c1', 'l2');
+  });
+
+  it('getCard returns JSON of card data when md=false', async () => {
+    const client = {
+      getCard: vi
+        .fn()
+        .mockResolvedValue({ id: 'c1', name: 'Task', desc: '', idList: 'l1', due: null, url: 'u' }),
+    };
+    const out = await getCard(client as unknown as TrelloClient, 'c1', { md: false });
+    expect(client.getCard).toHaveBeenCalledWith('c1', false);
+    expect(out).toContain('"id": "c1"');
+  });
+
+  it('getCard passes includeMarkdown=true when md=true and returns the string', async () => {
+    const mdString = '# Task\n\n- id: `c1`\n';
+    const client = { getCard: vi.fn().mockResolvedValue(mdString) };
+    const out = await getCard(client as unknown as TrelloClient, 'c1', { md: true });
+    expect(client.getCard).toHaveBeenCalledWith('c1', true);
+    expect(out).toBe(mdString);
+  });
+
+  it('myCards calls getMyCards', async () => {
+    const client = { getMyCards: vi.fn().mockResolvedValue([]) };
+    await myCards(client as unknown as TrelloClient, { md: false });
+    expect(client.getMyCards).toHaveBeenCalled();
+  });
+
+  it('myCards renders markdown list when md=true', async () => {
+    const client = {
+      getMyCards: vi.fn().mockResolvedValue([{ id: 'c1', name: 'Task', idList: 'l1' }]),
+    };
+    const out = await myCards(client as unknown as TrelloClient, { md: true });
+    expect(out).toContain('Task');
+    expect(out).toContain('c1');
+    expect(out).toContain('l1');
+  });
+
+  it('myCards returns "No cards assigned." for empty when md=true', async () => {
+    const client = { getMyCards: vi.fn().mockResolvedValue([]) };
+    const out = await myCards(client as unknown as TrelloClient, { md: true });
+    expect(out).toBe('No cards assigned.\n');
+  });
+});
