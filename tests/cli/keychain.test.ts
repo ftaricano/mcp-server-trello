@@ -43,7 +43,7 @@ describe('loadKeychainCredentials', () => {
   it('respects custom prefix (e.g. JARVIS_TRELLO)', () => {
     execFileSyncMock.mockImplementation((_cmd: string, args: string[]) => {
       const service = args[args.indexOf('-s') + 1];
-      if (service === 'JARVIS_TRELLO_API_KEY') return 'jk';
+      if (service === 'jarvis::TRELLO_API_KEY') return 'jk';
       throw new Error('not found');
     });
 
