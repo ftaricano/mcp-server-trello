@@ -19,14 +19,21 @@ function readKeychainItem(service: string): string | undefined {
   }
 }
 
+function keychainService(prefix: string, name: string): string {
+  if (prefix.startsWith('JARVIS_')) {
+    return `jarvis::${prefix.slice('JARVIS_'.length)}_${name}`;
+  }
+  return `${prefix}_${name}`;
+}
+
 export function loadKeychainCredentials(
   platform: NodeJS.Platform = process.platform,
   prefix: string | undefined = process.env.TRELLO_KEYCHAIN_PREFIX
 ): KeychainCreds {
   if (platform !== 'darwin' || !prefix) return {};
   return {
-    apiKey: readKeychainItem(`${prefix}_API_KEY`),
-    token: readKeychainItem(`${prefix}_TOKEN`),
-    boardId: readKeychainItem(`${prefix}_BOARD_ID`),
+    apiKey: readKeychainItem(keychainService(prefix, 'API_KEY')),
+    token: readKeychainItem(keychainService(prefix, 'TOKEN')),
+    boardId: readKeychainItem(keychainService(prefix, 'BOARD_ID')),
   };
 }
