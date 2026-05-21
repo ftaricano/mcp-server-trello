@@ -862,7 +862,23 @@ Contributions are welcome!
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Origin and what I added on top
+
+This project started as a fork of [@delorenj/mcp-server-trello](https://github.com/delorenj/mcp-server-trello). All credit for the original MCP server scaffolding, base Trello API integration, and initial tool surface goes to [Jarad DeLorenzo](https://github.com/delorenj).
+
+My additions on top of the original work:
+
+- **`trello` CLI binary** for local agent use (8 commands covering boards, lists, cards, comments, assignments; JSON output by default)
+- **macOS Keychain credential resolution** — CLI reads credentials from the macOS Keychain when `TRELLO_KEYCHAIN_PREFIX` is set
+- **CLI coverage expansion (v1.5.0)** — `card comment`, `card archive`, `card attach`, `card assign`, `card unassign`, `cards list`, `board labels`, `board members`
+- **93 unit tests** (Vitest, axios-mocked, no network)
+- **GitHub Actions CI** — lint, typecheck, test, build on Node 20/22
+- **Production hardening** — type hygiene (eliminated remaining `any`), pinned SDK 1.29.0, concurrency limits
+
+The original Trello tool surface remains intact. The CLI and tests are additive.
+
 ## Acknowledgments
 
+- Original MCP server by [Jarad DeLorenzo](https://github.com/delorenj) ([delorenj/mcp-server-trello](https://github.com/delorenj/mcp-server-trello))
 - Built with the [Model Context Protocol SDK](https://github.com/modelcontextprotocol/sdk)
 - Uses the [Trello REST API](https://developer.atlassian.com/cloud/trello/rest/)
