@@ -93,7 +93,7 @@ export class TrelloClient {
         workspaceId: this.activeConfig.workspaceId,
       };
       await fs.writeFile(CONFIG_FILE, JSON.stringify(configToSave, null, 2));
-    } catch (error) {
+    } catch {
       // Failed to save configuration
       throw new Error('Failed to save configuration');
     }
