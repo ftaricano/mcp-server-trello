@@ -202,7 +202,7 @@ export function validateAttachImageRequest(args: Record<string, unknown>): {
   const imageUrl = validateString(args.imageUrl, 'imageUrl');
   try {
     new URL(imageUrl);
-  } catch (e) {
+  } catch {
     throw new McpError(ErrorCode.InvalidParams, 'imageUrl must be a valid URL');
   }
 

@@ -1,7 +1,7 @@
 {
-  "name": "@delorenj/mcp-server-trello",
+  "name": "@ftaricano/mcp-server-trello",
   "version": "1.5.0",
-  "description": "A Model Context Protocol (MCP) server for interacting with Trello boards",
+  "description": "Professional Model Context Protocol server and CLI for Trello boards, lists, cards, checklists, and workspaces.",
   "type": "module",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -25,41 +25,44 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/delorenj/mcp-server-trello.git"
+    "url": "git+https://github.com/ftaricano/mcp-server-trello.git"
   },
   "keywords": [
     "mcp",
+    "mcp-server",
     "model-context-protocol",
     "trello",
+    "trello-api",
     "api",
     "integration",
     "automation",
+    "ai-agents",
+    "cli",
     "typescript",
     "board-management",
     "task-management",
     "kanban"
   ],
-  "author": "Jarad DeLorenzo",
+  "author": "Ferd Taricano",
+  "contributors": [
+    "Jarad DeLorenzo"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/delorenj/mcp-server-trello/issues"
+    "url": "https://github.com/ftaricano/mcp-server-trello/issues"
   },
-  "homepage": "https://github.com/delorenj/mcp-server-trello#readme",
+  "homepage": "https://github.com/ftaricano/mcp-server-trello#readme",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "axios": "^1.6.2",
     "commander": "^12.1.0",
     "dotenv": "^17.2.1",
     "zod": "^3.22.4"
   },
-  "optionalDependencies": {
-    "@ai-sdk/openai": "^1.3.23",
-    "mcp-evals": "^1.0.18"
-  },
   "devDependencies": {
     "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^6.12.0",
-    "@typescript-eslint/parser": "^6.12.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.4",
+    "@typescript-eslint/parser": "^8.59.4",
     "@vitest/coverage-v8": "^4.1.5",
     "eslint": "^8.54.0",
     "eslint-config-prettier": "^9.0.0",
@@ -71,7 +74,9 @@
     "vitest": "^4.1.5"
   },
   "files": [
-    "build/**/*"
+    "build/**/*",
+    "NOTICE.md",
+    "SECURITY.md"
   ],
   "engines": {
     "node": ">=20.0.0"
