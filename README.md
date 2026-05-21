@@ -219,6 +219,20 @@ npm pack --dry-run
 
 Keep changes focused and include tests for behavior changes.
 
+## Provenance
+
+This project started as a fork of [delorenj/mcp-server-trello](https://github.com/delorenj/mcp-server-trello). Credit for the original MCP server scaffolding, base Trello API integration, and initial tool surface belongs to [Jarad DeLorenzo](https://github.com/delorenj).
+
+This repository is maintained under `ftaricano/mcp-server-trello`. Additions include the `trello` CLI binary, macOS Keychain credential resolution, expanded CLI card/board/list coverage, 152 unit tests, CI on Node.js 20/22, package metadata ownership, security documentation, and npm pack hardening.
+
+See [NOTICE.md](NOTICE.md) for the provenance statement.
+
+## Acknowledgments
+
+- Original MCP server by [Jarad DeLorenzo](https://github.com/delorenj) ([delorenj/mcp-server-trello](https://github.com/delorenj/mcp-server-trello))
+- Built with the [Model Context Protocol SDK](https://github.com/modelcontextprotocol/sdk)
+- Uses the [Trello REST API](https://developer.atlassian.com/cloud/trello/rest/)
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
