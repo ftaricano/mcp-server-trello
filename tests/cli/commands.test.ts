@@ -119,6 +119,39 @@ describe('cli cards commands', () => {
     });
   });
 
+  it('addCard preserves a multiline desc (markdown/accents/quotes) through JSON output (JAR-256)', async () => {
+    const multiline = [
+      '**PIS Interpar**',
+      'Valor: `R$ 1.234,56`',
+      'Vencimento: 25/05 — atenção à "competência"',
+      "Obs: çãõé com backticks ``` e aspas 'simples'",
+    ].join('\n');
+    const client = {
+      addCard: vi.fn().mockResolvedValue({
+        id: 'c1',
+        shortLink: 'abc123',
+        name: 'PIS Interpar',
+        desc: multiline,
+        idList: 'l1',
+        due: null,
+        url: 'u',
+      }),
+    };
+    const out = await addCard(client as unknown as TrelloClient, 'l1', 'PIS Interpar', {
+      md: false,
+      desc: multiline,
+    });
+    // handler forwards the multiline desc unchanged to the client
+    expect(client.addCard).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ description: multiline })
+    );
+    // output is parseable JSON that round-trips the desc exactly and exposes shortLink
+    const parsed = JSON.parse(out);
+    expect(parsed.desc).toBe(multiline);
+    expect(parsed.shortLink).toBe('abc123');
+  });
+
   it('addCard --board overrides board param', async () => {
     const client = {
       addCard: vi
