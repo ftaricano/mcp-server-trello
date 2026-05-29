@@ -24,6 +24,7 @@ import {
   unassignMember,
 } from './cli/commands/cards.js';
 import { loadKeychainCredentials } from './cli/keychain.js';
+import { executeCommand } from './cli/run.js';
 
 function makeClient(): TrelloClient {
   const keychain = loadKeychainCredentials();
@@ -44,14 +45,12 @@ async function run<T extends unknown[]>(
   ...args: T
 ): Promise<void> {
   const client = makeClient();
-  await client.loadConfig();
-  try {
-    const out = await fn(client, ...args);
-    process.stdout.write(out);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`Error: ${msg}\n`);
-    process.exit(2);
+  const { stdout, exitCode } = await executeCommand(client, fn, ...args);
+  process.stdout.write(stdout);
+  if (exitCode !== 0) {
+    const parsed = JSON.parse(stdout) as { error?: string };
+    process.stderr.write(`Error: ${parsed.error ?? 'command failed'}\n`);
+    process.exitCode = exitCode;
   }
 }
 
