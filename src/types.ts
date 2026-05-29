@@ -102,6 +102,13 @@ export interface TrelloAttachment {
   isUpload: boolean;
 }
 
+export interface AttachmentDownload {
+  fileName: string;
+  mimeType: string;
+  bytes: number;
+  data: Buffer;
+}
+
 export interface TrelloCheckItem {
   id: string;
   name: string;

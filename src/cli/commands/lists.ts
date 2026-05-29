@@ -27,3 +27,21 @@ export async function cardsInList(
   }
   return formatJson(cards);
 }
+
+export async function addList(
+  client: TrelloClient,
+  name: string,
+  opts: ListsOpts
+): Promise<string> {
+  const list = await client.addList(opts.board, name);
+  return opts.md ? `List created: **${list.name}** (\`${list.id}\`)\n` : formatJson(list);
+}
+
+export async function archiveList(
+  client: TrelloClient,
+  listId: string,
+  opts: ListsOpts
+): Promise<string> {
+  const list = await client.archiveList(opts.board, listId);
+  return opts.md ? `List archived (\`${list.id}\`)\n` : formatJson(list);
+}

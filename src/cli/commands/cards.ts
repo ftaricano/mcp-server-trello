@@ -1,3 +1,5 @@
+import { writeFile } from 'node:fs/promises';
+import { basename, resolve } from 'node:path';
 import type { TrelloClient } from '../../trello-client.js';
 import { formatJson, formatCardMarkdown } from '../output.js';
 
@@ -127,6 +129,55 @@ export async function attachImage(
   return opts.md
     ? `Attachment added (\`${attachment.id}\`)\n${attachment.url}\n`
     : formatJson(attachment);
+}
+
+export async function cardAttachments(
+  client: TrelloClient,
+  cardId: string,
+  opts: BaseOpts
+): Promise<string> {
+  const attachments = await client.getCardAttachments(cardId);
+  if (opts.md) {
+    if (attachments.length === 0) return 'No attachments.\n';
+    return (
+      attachments
+        .map(
+          a =>
+            `- **${a.name}** (\`${a.id}\`) — ${a.mimeType ?? 'unknown'}, ${a.bytes ?? '?'} bytes\n  ${a.url}`
+        )
+        .join('\n') + '\n'
+    );
+  }
+  return formatJson(attachments);
+}
+
+export async function downloadAttachment(
+  client: TrelloClient,
+  cardId: string,
+  attachmentId: string,
+  opts: BaseOpts & { out?: string }
+): Promise<string> {
+  const dl = await client.downloadAttachment(cardId, attachmentId);
+  // Derive the default name via basename() so an attacker-controlled attachment fileName
+  // (e.g. "../../x") can't traverse outside the cwd. An explicit --out is the user's own choice.
+  const target = opts.out ? resolve(opts.out) : resolve(basename(dl.fileName));
+  await writeFile(target, dl.data);
+  const result = { fileName: dl.fileName, mimeType: dl.mimeType, bytes: dl.bytes, savedTo: target };
+  return opts.md
+    ? `Saved **${dl.fileName}** (${dl.bytes} bytes) to ${target}\n`
+    : formatJson(result);
+}
+
+export async function deleteAttachment(
+  client: TrelloClient,
+  cardId: string,
+  attachmentId: string,
+  opts: BaseOpts
+): Promise<string> {
+  const result = await client.deleteAttachment(cardId, attachmentId);
+  return opts.md
+    ? `Attachment \`${attachmentId}\` deleted from card \`${cardId}\`\n`
+    : formatJson(result);
 }
 
 export async function assignMember(

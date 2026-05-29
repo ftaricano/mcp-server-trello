@@ -23,6 +23,7 @@ vi.mock('axios', () => {
   return {
     default: {
       create,
+      get: vi.fn(),
       isAxiosError: vi.fn(() => false),
     },
     isAxiosError: vi.fn(() => false),
@@ -371,6 +372,141 @@ describe('TrelloClient', () => {
       expect(mock.delete).toHaveBeenCalledWith(
         expect.stringContaining('/cards/card1/idMembers/m1')
       );
+    });
+  });
+
+  describe('attachments', () => {
+    it('getCardAttachments GETs /cards/{id}/attachments', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({
+        data: [{ id: 'att1', name: 'file', url: 'https://trello.com/x' }],
+      });
+
+      const atts = await client.getCardAttachments('card1');
+
+      expect(mock.get).toHaveBeenCalledWith('/cards/card1/attachments');
+      expect(atts[0].id).toBe('att1');
+    });
+
+    it('getAttachment GETs /cards/{id}/attachments/{attId}', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({ data: { id: 'att1', name: 'file' } });
+
+      const att = await client.getAttachment('card1', 'att1');
+
+      expect(mock.get).toHaveBeenCalledWith('/cards/card1/attachments/att1');
+      expect(att.id).toBe('att1');
+    });
+
+    it('downloadAttachment sends OAuth header for trello.com hosts', async () => {
+      const client = new TrelloClient({ apiKey: 'mykey', token: 'mytok' });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({
+        data: {
+          id: 'att1',
+          name: 'doc',
+          fileName: 'doc.pdf',
+          mimeType: 'application/pdf',
+          url: 'https://trello.com/1/cards/card1/attachments/att1/download/doc.pdf',
+          bytes: 3,
+        },
+      });
+      const axiosGet = axios.get as unknown as ReturnType<typeof vi.fn>;
+      axiosGet.mockResolvedValueOnce({
+        data: Buffer.from('abc'),
+        headers: { 'content-type': 'application/pdf' },
+      });
+
+      const dl = await client.downloadAttachment('card1', 'att1');
+
+      expect(dl.fileName).toBe('doc.pdf');
+      expect(dl.mimeType).toBe('application/pdf');
+      expect(dl.bytes).toBe(3);
+      const [url, cfg] = axiosGet.mock.calls[axiosGet.mock.calls.length - 1];
+      expect(url).toContain('trello.com');
+      expect(cfg.responseType).toBe('arraybuffer');
+      expect(cfg.headers.Authorization).toMatch(
+        /OAuth oauth_consumer_key="mykey", oauth_token="mytok"/
+      );
+    });
+
+    it('downloadAttachment does NOT leak credentials to external hosts', async () => {
+      const client = new TrelloClient({ apiKey: 'mykey', token: 'mytok' });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({
+        data: {
+          id: 'att2',
+          name: 'link',
+          fileName: null,
+          mimeType: '',
+          url: 'https://example.com/file.bin',
+          bytes: 0,
+        },
+      });
+      const axiosGet = axios.get as unknown as ReturnType<typeof vi.fn>;
+      axiosGet.mockResolvedValueOnce({ data: Buffer.from('x'), headers: {} });
+
+      await client.downloadAttachment('card1', 'att2');
+
+      const [, cfg] = axiosGet.mock.calls[axiosGet.mock.calls.length - 1];
+      expect(cfg.headers.Authorization).toBeUndefined();
+    });
+
+    it('beforeRedirect drops the OAuth header when a download redirects off trello.com', async () => {
+      const client = new TrelloClient({ apiKey: 'mykey', token: 'mytok' });
+      const mock = getMockInstance(client);
+      mock.get.mockResolvedValueOnce({
+        data: {
+          id: 'att1',
+          name: 'doc',
+          fileName: 'doc.pdf',
+          mimeType: 'application/pdf',
+          url: 'https://trello.com/1/cards/card1/attachments/att1/download/doc.pdf',
+          bytes: 3,
+        },
+      });
+      const axiosGet = axios.get as unknown as ReturnType<typeof vi.fn>;
+      axiosGet.mockResolvedValueOnce({
+        data: Buffer.from('abc'),
+        headers: { 'content-type': 'application/pdf' },
+      });
+
+      await client.downloadAttachment('card1', 'att1');
+
+      const [, cfg] = axiosGet.mock.calls[axiosGet.mock.calls.length - 1];
+      const beforeRedirect = cfg.beforeRedirect as (o: {
+        hostname: string;
+        headers: Record<string, string>;
+      }) => void;
+
+      // Redirect to a non-Trello host (e.g. S3 presigned URL): credentials must be stripped.
+      const foreign = {
+        hostname: 'trello-attachments.s3.amazonaws.com',
+        headers: { Authorization: 'OAuth x' } as Record<string, string>,
+      };
+      beforeRedirect(foreign);
+      expect(foreign.headers.Authorization).toBeUndefined();
+
+      // Redirect that stays within Trello: header is preserved.
+      const internal = {
+        hostname: 'api.trello.com',
+        headers: { Authorization: 'OAuth x' } as Record<string, string>,
+      };
+      beforeRedirect(internal);
+      expect(internal.headers.Authorization).toBe('OAuth x');
+    });
+
+    it('deleteAttachment DELETEs and returns confirmation', async () => {
+      const client = new TrelloClient({ apiKey: 'k', token: 't' });
+      const mock = getMockInstance(client);
+      mock.delete.mockResolvedValueOnce({ data: { _value: null } });
+
+      const res = await client.deleteAttachment('card1', 'att1');
+
+      expect(mock.delete).toHaveBeenCalledWith('/cards/card1/attachments/att1');
+      expect(res).toEqual({ id: 'att1', deleted: true });
     });
   });
 

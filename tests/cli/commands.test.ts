@@ -456,3 +456,245 @@ describe('cli board labels/members', () => {
     expect(out).toBe('No labels.\n');
   });
 });
+
+import { addList, archiveList } from '../../src/cli/commands/lists.js';
+
+describe('cli list add/archive', () => {
+  it('addList calls client.addList with board + name', async () => {
+    const client = { addList: vi.fn().mockResolvedValue({ id: 'l1', name: 'Backlog' }) };
+    const out = await addList(client as unknown as TrelloClient, 'Backlog', { md: false });
+    expect(client.addList).toHaveBeenCalledWith(undefined, 'Backlog');
+    expect(out).toContain('"id": "l1"');
+  });
+
+  it('addList --board override + markdown', async () => {
+    const client = { addList: vi.fn().mockResolvedValue({ id: 'l1', name: 'Backlog' }) };
+    const out = await addList(client as unknown as TrelloClient, 'Backlog', {
+      md: true,
+      board: 'b9',
+    });
+    expect(client.addList).toHaveBeenCalledWith('b9', 'Backlog');
+    expect(out).toContain('Backlog');
+  });
+
+  it('archiveList calls client.archiveList with board + listId', async () => {
+    const client = { archiveList: vi.fn().mockResolvedValue({ id: 'l1', closed: true }) };
+    await archiveList(client as unknown as TrelloClient, 'l1', { md: false, board: 'b9' });
+    expect(client.archiveList).toHaveBeenCalledWith('b9', 'l1');
+  });
+});
+
+import { recentActivity } from '../../src/cli/commands/activity.js';
+
+describe('cli activity', () => {
+  it('recentActivity defaults limit to 10 and passes board', async () => {
+    const client = { getRecentActivity: vi.fn().mockResolvedValue([]) };
+    await recentActivity(client as unknown as TrelloClient, { md: false, board: 'b9' });
+    expect(client.getRecentActivity).toHaveBeenCalledWith('b9', 10);
+  });
+
+  it('recentActivity parses --limit', async () => {
+    const client = { getRecentActivity: vi.fn().mockResolvedValue([]) };
+    await recentActivity(client as unknown as TrelloClient, { md: false, limit: '5' });
+    expect(client.getRecentActivity).toHaveBeenCalledWith(undefined, 5);
+  });
+
+  it('recentActivity renders markdown lines', async () => {
+    const client = {
+      getRecentActivity: vi
+        .fn()
+        .mockResolvedValue([
+          { date: '2026-05-29', type: 'commentCard', memberCreator: { fullName: 'Ferd' } },
+        ]),
+    };
+    const out = await recentActivity(client as unknown as TrelloClient, { md: true });
+    expect(out).toContain('commentCard');
+    expect(out).toContain('Ferd');
+  });
+});
+
+import {
+  listWorkspaces,
+  setWorkspace,
+  workspaceBoards,
+} from '../../src/cli/commands/workspaces.js';
+
+describe('cli workspaces', () => {
+  it('listWorkspaces returns JSON', async () => {
+    const client = {
+      listWorkspaces: vi.fn().mockResolvedValue([{ id: 'w1', displayName: 'Acme' }]),
+    };
+    const out = await listWorkspaces(client as unknown as TrelloClient, { md: false });
+    expect(out).toContain('"id": "w1"');
+  });
+
+  it('setWorkspace calls setActiveWorkspace and confirms', async () => {
+    const client = {
+      setActiveWorkspace: vi.fn().mockResolvedValue({ id: 'w1', displayName: 'Acme' }),
+    };
+    const out = await setWorkspace(client as unknown as TrelloClient, 'w1', { md: true });
+    expect(client.setActiveWorkspace).toHaveBeenCalledWith('w1');
+    expect(out).toContain('Acme');
+  });
+
+  it('workspaceBoards lists boards in a workspace', async () => {
+    const client = {
+      listBoardsInWorkspace: vi.fn().mockResolvedValue([{ id: 'b1', name: 'B1', url: 'u' }]),
+    };
+    const out = await workspaceBoards(client as unknown as TrelloClient, 'w1', { md: false });
+    expect(client.listBoardsInWorkspace).toHaveBeenCalledWith('w1');
+    expect(out).toContain('"id": "b1"');
+  });
+});
+
+import {
+  checklistItems,
+  addChecklistItem,
+  findChecklistItems,
+  acceptanceCriteria,
+  checklistByName,
+} from '../../src/cli/commands/checklists.js';
+
+describe('cli checklists', () => {
+  it('checklistItems passes name + board', async () => {
+    const client = {
+      getChecklistItems: vi.fn().mockResolvedValue([{ id: 'i1', text: 'do it', complete: false }]),
+    };
+    const out = await checklistItems(client as unknown as TrelloClient, 'QA', {
+      md: false,
+      board: 'b9',
+    });
+    expect(client.getChecklistItems).toHaveBeenCalledWith('QA', 'b9');
+    expect(out).toContain('"id": "i1"');
+  });
+
+  it('checklistItems markdown renders checkbox state', async () => {
+    const client = {
+      getChecklistItems: vi.fn().mockResolvedValue([{ id: 'i1', text: 'done', complete: true }]),
+    };
+    const out = await checklistItems(client as unknown as TrelloClient, 'QA', { md: true });
+    expect(out).toContain('[x] done');
+  });
+
+  it('addChecklistItem maps args to (text, checkListName, board)', async () => {
+    const client = { addChecklistItem: vi.fn().mockResolvedValue({ id: 'i1' }) };
+    await addChecklistItem(client as unknown as TrelloClient, 'QA', 'new item', { md: false });
+    expect(client.addChecklistItem).toHaveBeenCalledWith('new item', 'QA', undefined);
+  });
+
+  it('findChecklistItems passes description', async () => {
+    const client = { findChecklistItemsByDescription: vi.fn().mockResolvedValue([]) };
+    await findChecklistItems(client as unknown as TrelloClient, 'deploy', { md: false });
+    expect(client.findChecklistItemsByDescription).toHaveBeenCalledWith('deploy', undefined);
+  });
+
+  it('acceptanceCriteria passes board', async () => {
+    const client = { getAcceptanceCriteria: vi.fn().mockResolvedValue([]) };
+    await acceptanceCriteria(client as unknown as TrelloClient, { md: false, board: 'b9' });
+    expect(client.getAcceptanceCriteria).toHaveBeenCalledWith('b9');
+  });
+
+  it('checklistByName returns {found:false} for missing checklist (JSON)', async () => {
+    const client = { getChecklistByName: vi.fn().mockResolvedValue(null) };
+    const out = await checklistByName(client as unknown as TrelloClient, 'Nope', { md: false });
+    expect(out).toContain('"found": false');
+  });
+
+  it('checklistByName renders header + items in markdown', async () => {
+    const client = {
+      getChecklistByName: vi.fn().mockResolvedValue({
+        id: 'cl1',
+        name: 'QA',
+        percentComplete: 50,
+        items: [{ id: 'i1', text: 'a', complete: true }],
+      }),
+    };
+    const out = await checklistByName(client as unknown as TrelloClient, 'QA', { md: true });
+    expect(out).toContain('## QA (50%)');
+    expect(out).toContain('[x] a');
+  });
+});
+
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { readFile, rm } from 'node:fs/promises';
+import {
+  cardAttachments,
+  downloadAttachment,
+  deleteAttachment,
+} from '../../src/cli/commands/cards.js';
+
+describe('cli card attachments', () => {
+  it('cardAttachments lists attachments as JSON', async () => {
+    const client = {
+      getCardAttachments: vi
+        .fn()
+        .mockResolvedValue([
+          { id: 'a1', name: 'doc', url: 'u', mimeType: 'application/pdf', bytes: 10 },
+        ]),
+    };
+    const out = await cardAttachments(client as unknown as TrelloClient, 'c1', { md: false });
+    expect(client.getCardAttachments).toHaveBeenCalledWith('c1');
+    expect(out).toContain('"id": "a1"');
+  });
+
+  it('downloadAttachment writes bytes to --out and reports metadata', async () => {
+    const out = join(tmpdir(), `trello-dl-${Date.now()}.bin`);
+    const client = {
+      downloadAttachment: vi.fn().mockResolvedValue({
+        fileName: 'doc.pdf',
+        mimeType: 'application/pdf',
+        bytes: 5,
+        data: Buffer.from('hello'),
+      }),
+    };
+    try {
+      const res = await downloadAttachment(client as unknown as TrelloClient, 'c1', 'a1', {
+        md: false,
+        out,
+      });
+      expect(client.downloadAttachment).toHaveBeenCalledWith('c1', 'a1');
+      const written = await readFile(out);
+      expect(written.toString()).toBe('hello');
+      expect(res).toContain('"savedTo"');
+      expect(res).toContain('"bytes": 5');
+    } finally {
+      await rm(out, { force: true });
+    }
+  });
+
+  it('deleteAttachment calls client and confirms in markdown', async () => {
+    const client = {
+      deleteAttachment: vi.fn().mockResolvedValue({ id: 'a1', deleted: true }),
+    };
+    const res = await deleteAttachment(client as unknown as TrelloClient, 'c1', 'a1', { md: true });
+    expect(client.deleteAttachment).toHaveBeenCalledWith('c1', 'a1');
+    expect(res).toMatch(/deleted/);
+  });
+
+  it('downloadAttachment basenames the attachment fileName to block path traversal', async () => {
+    const traversalName = `../../trello-traversal-${Date.now()}.bin`;
+    const expectedTarget = resolve(traversalName.split('/').pop() as string);
+    const client = {
+      downloadAttachment: vi.fn().mockResolvedValue({
+        fileName: traversalName,
+        mimeType: 'application/octet-stream',
+        bytes: 3,
+        data: Buffer.from('abc'),
+      }),
+    };
+    try {
+      const res = await downloadAttachment(client as unknown as TrelloClient, 'c1', 'a1', {
+        md: false,
+      });
+      const parsed = JSON.parse(res) as { savedTo: string };
+      // The "../../" must be stripped: the file lands inside the cwd, not at a traversed path.
+      expect(parsed.savedTo).toBe(expectedTarget);
+      expect(parsed.savedTo).not.toContain('..');
+      const written = await readFile(expectedTarget);
+      expect(written.toString()).toBe('abc');
+    } finally {
+      await rm(expectedTarget, { force: true });
+    }
+  });
+});

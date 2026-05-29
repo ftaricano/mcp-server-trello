@@ -3,7 +3,10 @@ import type { TrelloClient } from '../../src/trello-client.js';
 import { executeCommand } from '../../src/cli/run.js';
 
 function clientStub(overrides: Record<string, unknown> = {}): TrelloClient {
-  return { loadConfig: vi.fn().mockResolvedValue(undefined), ...overrides } as unknown as TrelloClient;
+  return {
+    loadConfig: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as unknown as TrelloClient;
 }
 
 describe('executeCommand (JAR-256)', () => {

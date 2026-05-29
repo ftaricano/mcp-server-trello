@@ -5,6 +5,7 @@ import {
   TrelloList,
   TrelloAction,
   TrelloAttachment,
+  AttachmentDownload,
   TrelloBoard,
   TrelloWorkspace,
   EnhancedTrelloCard,
@@ -368,6 +369,87 @@ export class TrelloClient {
       });
       return response.data;
     });
+  }
+
+  async getCardAttachments(cardId: string): Promise<TrelloAttachment[]> {
+    return this.handleRequest(async () => {
+      const response = await this.axiosInstance.get(`/cards/${cardId}/attachments`);
+      return response.data;
+    });
+  }
+
+  async getAttachment(cardId: string, attachmentId: string): Promise<TrelloAttachment> {
+    return this.handleRequest(async () => {
+      const response = await this.axiosInstance.get(`/cards/${cardId}/attachments/${attachmentId}`);
+      return response.data;
+    });
+  }
+
+  /**
+   * Download an attachment's binary content.
+   *
+   * Trello-hosted attachment URLs on private boards return 401 to a plain fetch —
+   * they require the OAuth Authorization header. We attach that header only for
+   * *.trello.com hosts so the API credentials are never leaked to arbitrary
+   * external-link attachments (isUpload=false).
+   */
+  async downloadAttachment(cardId: string, attachmentId: string): Promise<AttachmentDownload> {
+    const meta = await this.getAttachment(cardId, attachmentId);
+    return this.handleRequest(async () => {
+      const headers: Record<string, string> = {};
+      if (this.isTrelloHostedUrl(meta.url)) {
+        headers.Authorization = `OAuth oauth_consumer_key="${this.config.apiKey}", oauth_token="${this.config.token}"`;
+      }
+      const response = await axios.get(meta.url, {
+        responseType: 'arraybuffer',
+        headers,
+        // Defense-in-depth: Trello 302-redirects private downloads off trello.com (e.g. to S3).
+        // Strip the OAuth header before any redirect that leaves a Trello host, so credentials can
+        // never follow it to a third party — we don't rely on the HTTP client's implicit behavior.
+        beforeRedirect: (options: Record<string, unknown>) => {
+          const host = typeof options.hostname === 'string' ? options.hostname : '';
+          if (this.isTrelloHostname(host)) return;
+          const reqHeaders = options.headers as Record<string, string> | undefined;
+          if (!reqHeaders) return;
+          for (const key of Object.keys(reqHeaders)) {
+            if (key.toLowerCase() === 'authorization') delete reqHeaders[key];
+          }
+        },
+      });
+      const data = Buffer.from(response.data as ArrayBuffer);
+      const contentType = response.headers['content-type'];
+      return {
+        fileName: meta.fileName || meta.name || attachmentId,
+        mimeType:
+          meta.mimeType ||
+          (typeof contentType === 'string' ? contentType : 'application/octet-stream'),
+        bytes: data.byteLength,
+        data,
+      };
+    });
+  }
+
+  async deleteAttachment(
+    cardId: string,
+    attachmentId: string
+  ): Promise<{ id: string; deleted: true }> {
+    return this.handleRequest(async () => {
+      await this.axiosInstance.delete(`/cards/${cardId}/attachments/${attachmentId}`);
+      return { id: attachmentId, deleted: true };
+    });
+  }
+
+  private isTrelloHostname(host: string): boolean {
+    const h = host.toLowerCase();
+    return h === 'trello.com' || h.endsWith('.trello.com');
+  }
+
+  private isTrelloHostedUrl(rawUrl: string): boolean {
+    try {
+      return this.isTrelloHostname(new URL(rawUrl).hostname);
+    } catch {
+      return false;
+    }
   }
 
   async addComment(cardId: string, text: string): Promise<TrelloAction> {
