@@ -1,10 +1,10 @@
 # CLAUDE.md -- mcp-server-trello
 
-MCP server e CLI local para Trello, mantido como `@ftaricano/mcp-server-trello`. Expoe 23 ferramentas tipadas via Model Context Protocol e um binario `trello` para workflows de agente no terminal.
+MCP server e CLI local para Trello, mantido como `@ftaricano/mcp-server-trello`. Expoe 31 ferramentas tipadas via Model Context Protocol e um binario `trello` para workflows de agente no terminal.
 
 ## O que e
 
-Servidor MCP + CLI que conecta agentes ao Trello: boards, listas, cards, checklists, workspace e atividade recente. Publicado no npm (`@ftaricano/mcp-server-trello`). Consumido pelo ecossistema Jarvis via skill `trello` e por qualquer cliente MCP-compativel. Fork do projeto original de Jarad DeLorenzo (MIT); proveniencia documentada em `NOTICE.md`.
+Servidor MCP + CLI que conecta agentes ao Trello: boards, listas, cards, checklists, workspace e atividade recente. Publicado no npm (`@ftaricano/mcp-server-trello`). Consumido pelo ecossistema Jarvis via skill `trello-cpz` e por qualquer cliente MCP-compativel. Fork do projeto original de Jarad DeLorenzo (MIT); proveniencia documentada em `NOTICE.md`.
 
 ## Stack & estrutura
 
@@ -15,7 +15,7 @@ src/
   index.ts          # entry point do servidor MCP (stdio)
   cli.ts            # entry point do binario trello
   cli/              # subcomandos do CLI
-  mcp-tools.ts      # 23 ferramentas MCP registradas
+  mcp-tools.ts      # 31 ferramentas MCP registradas
   trello-client.ts  # wrapper da API Trello com rate limiter
   rate-limiter.ts   # token bucket (300/10s por key, 100/10s por token)
   validators.ts     # validacao Zod dos inputs
@@ -72,4 +72,4 @@ node build/cli.js list-boards --md
 
 ## Documentacao canonica
 
-- Skill: `trello` (hub skills) | Proveniencia: `NOTICE.md` | Seguranca: `SECURITY.md`
+- Skill: `trello-cpz` (hub skills) | Proveniencia: `NOTICE.md` | Seguranca: `SECURITY.md`

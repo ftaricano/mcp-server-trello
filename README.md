@@ -5,13 +5,13 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
 ![MCP](https://img.shields.io/badge/MCP-compatible-8A2BE2.svg)
 
-Professional Model Context Protocol (MCP) server and local CLI for Trello. It exposes 23 typed tools for boards, lists, cards, checklists, activity, and workspace navigation, with Trello-aware rate limiting and validation built in.
+Professional Model Context Protocol (MCP) server and local CLI for Trello. It exposes 31 typed tools for boards, lists, cards, checklists, activity, and workspace navigation, with Trello-aware rate limiting and validation built in.
 
 This repository is maintained as `ftaricano/mcp-server-trello`. It is derived from MIT-licensed original work by Jarad DeLorenzo, with original copyright preserved and current ownership/provenance documented in [NOTICE.md](NOTICE.md).
 
 ## Highlights
 
-- 23 MCP tools for cards, lists, boards, workspaces, checklists, attachments, and activity.
+- 31 MCP tools for cards, lists, boards, workspaces, checklists, attachments, and activity.
 - Multi-board and workspace support with persisted active board/workspace state.
 - Trello API rate limiting for the documented per-key and per-token limits.
 - Zod input validation and TypeScript declarations in the published package.
